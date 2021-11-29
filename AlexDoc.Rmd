@@ -1,0 +1,55 @@
+---
+title: "AlexDoc"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(tidyverse)
+library(glmnet)
+library(stringr)
+```
+
+
+```{r}
+heart <- read.csv(file = 'heart.csv')
+heart %>% 
+  count(Cholesterol)
+heart %>% 
+  count(RestingBP)
+heart %>% 
+  count(Age)
+heart %>% 
+  count(MaxHR)
+heart %>% 
+  count(Oldpeak)
+heart %>% 
+  count(ST_Slope)
+heart %>% 
+  count(HeartDisease)
+heart <- heart %>% 
+  filter(Cholesterol != 0) %>% 
+  filter(RestingBP!=0)
+```
+
+```{r}
+heart
+x <- model.matrix(HeartDisease~., heart)[,-1]
+y <- heart$HeartDisease
+#Finding optimal lambda shrinkage value to reduce error through cross validation
+set.seed(123)
+
+
+cv.lasso <- cv.glmnet(x, y, alpha = 1, family = "binomial")
+#Creation of lasso model and outputting regression coefficients
+lasso_model <- glmnet(x, y, alpha = 1, family = "binomial",
+lambda = cv.lasso$lambda.min)
+coef(lasso_model)
+
+```
+
