@@ -42,4 +42,39 @@ summary(svmfit)
 ```
 
 
+The code below creates a training and test data set.
+
+```{r}
+set.seed(1)
+training <- sample(dim(heart)[1], 522)
+train <- heart[training, ]
+test <- heart[-training, ]
+```
+
+The code below fits a support vector classifier.
+
+```{r}
+svm.fit = svm(HeartDisease ~., data = train, kernel = "linear", cost=0.01)
+summary(svm.fit)
+```
+There are 720 Support Vectors.
+
+```{r}
+svm.pred <- predict(svm.fit, test)
+wrong <- 0
+# what you need to change
+threshold <- 0.5
+for (i in 1: length(svm.pred)) {
+  temp <- svm.pred[i]
+  if(temp < threshold){
+    temp <- 0
+  } else{
+    temp <- 1
+  }
+  if (temp != test$HeartDisease[i]) {
+    wrong = wrong + 1
+  }
+}
+print(wrong/length(test$HeartDisease))
+```
 
