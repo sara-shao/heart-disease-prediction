@@ -1,0 +1,37 @@
+---
+title: "Tree Model"
+author: "Sara Shao"
+date: "12/6/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      warning= FALSE,
+                      message = FALSE,
+                     fig.align = "center",
+                     fig.width=5, 
+                     fig.height=3)
+```
+
+```{r}
+library(tidyverse)
+library(patchwork)
+library(randomForest)
+heart <- read.csv(file = 'heart.csv')
+heart$HeartDisease <- factor(heart$HeartDisease)
+#head(heart)
+```
+
+```{r}
+x <- model.matrix(HeartDisease~., heart)[,-1]
+y <- heart$HeartDisease
+#Finding optimal lambda shrinkage value to reduce error through cross validation
+set.seed(1)
+```
+
+```{r}
+rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11))
+rf.heart
+```
+
