@@ -1,0 +1,74 @@
+---
+title: "Data"
+author: "Sara Shao"
+date: "12/5/2021"
+output: pdf_document
+---
+
+
+## Data
+### Description
+
+Link to data: https://www.kaggle.com/fedesoriano/heart-failure-prediction
+
+We obtained our data from Kaggle. This data is the result of 5 heart disease datasets combined into one dataset. These five datasets are from Cleveland, Hungaria, Switzerland, Long Beach, and Stalog, with similar amounts of observations from each. It is apparently one of the largest heart disease datasets available. The dataset has 11 predictor variables, which are age, sex, chest pain types, resting BP, cholesterol, fasting blood sugar, resting ECG results, maximum heart rate, exercise-induced angina, oldpeak, and slope of the peak exercise ST segment. Sex, chest pain types, resting ECG, exercise-induced angina, and ST slope are categorical variables, while the rest are numeric. It has one predictor variable, which is whether or not the patient has heart disease. It has roughly the same amount of positive and negative heart disease diagnoses. Because in the dataset the incidence of heart failure is roughly equal to the incidence of non-heart failure, the data is likely not based on the general population, where we would expect the incidence of heart disease to be a lot lower. This means that probabilistic prediction models may be skewed in their results, but we can still make inferences about important predictors.
+
+### EDA
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      warning= FALSE,
+                      message = FALSE,
+                     fig.align = "center",
+                     fig.width=5, 
+                     fig.height=3)
+```
+
+```{r}
+library(tidyverse)
+library(patchwork)
+heart <- read.csv(file = 'heart.csv')
+heart$HeartDisease <- factor(heart$HeartDisease)
+#head(heart)
+```
+
+```{r}
+eda1 <- ggplot(data = heart, mapping = aes(x = HeartDisease, fill = Sex)) +
+  geom_bar(position = "fill")
+
+eda2 <- ggplot(data = heart, mapping = aes(x = HeartDisease, fill = ChestPainType)) +
+  geom_bar(position = "fill")
+
+eda3 <- ggplot(data = heart, mapping = aes(x = HeartDisease, fill = ExerciseAngina)) +
+  geom_bar(position = "fill")
+
+eda4 <- ggplot(data = heart, mapping = aes(x = HeartDisease, fill = ST_Slope)) +
+  geom_bar(position = "fill")
+
+(eda1+eda2) / (eda3+eda4)
+```
+
+The above 4 categorical variables, sex, chest pain types, exercise-induced angina, and ST slope seem to have some relationship with heart disease incidence, so these variables will be good to look out for in our final model.
+
+```{r}
+eda1 <- ggplot(data = heart, mapping = aes(x = HeartDisease, y = Age)) +
+  geom_boxplot()
+
+eda2 <- ggplot(data = heart, mapping = aes(x = HeartDisease, y = MaxHR)) +
+  geom_boxplot()
+
+eda3 <- ggplot(data = heart, mapping = aes(x = HeartDisease, y = Cholesterol)) +
+  geom_boxplot()
+
+eda4 <- ggplot(data = heart, mapping = aes(x = HeartDisease, y = FastingBS)) +
+  geom_boxplot()
+
+eda5 <- ggplot(data = heart, mapping = aes(x = HeartDisease, y = Oldpeak)) +
+  geom_boxplot()
+
+(eda1+eda2+eda3) / (eda4+eda5)
+```
+
+It seems that these above 5 numeric variables, age, max heart rate, cholesterol, fasting blood sugar, and oldpeak may have a relationship with heart heart disease and would be worth exploring in our models. 
+
+
