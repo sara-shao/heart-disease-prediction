@@ -47,3 +47,7 @@ heart.imp.3 <- complete(heart.imp.ls, 3)
 heart.imp.4 <- complete(heart.imp.ls, 4)
 heart.imp.5 <- complete(heart.imp.ls, 5)
 ```
+
+```{r imputed_vals_viz}
+densityplot(heart.imp.ls)
+```
