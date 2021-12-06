@@ -38,8 +38,22 @@ heart <- heart %>%
 ```
 
 ```{r}
-heart
 x <- model.matrix(HeartDisease~., heart)[,-1]
+y <- heart$HeartDisease
+#Finding optimal lambda shrinkage value to reduce error through cross validation
+set.seed(123)
+
+
+cv.lasso <- cv.glmnet(x, y, alpha = 1, family = "binomial")
+#Creation of lasso model and outputting regression coefficients
+lasso_model <- glmnet(x, y, alpha = 1, family = "binomial",
+lambda = cv.lasso$lambda.min)
+coef(lasso_model)
+```
+
+```{r}
+
+x <- model.matrix(HeartDisease~.^2, heart)[,-1]
 y <- heart$HeartDisease
 #Finding optimal lambda shrinkage value to reduce error through cross validation
 set.seed(123)
