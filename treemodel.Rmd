@@ -18,6 +18,7 @@ knitr::opts_chunk$set(echo = FALSE,
 library(tidyverse)
 library(patchwork)
 library(randomForest)
+library(pROC)
 heart <- read.csv(file = 'heart.csv')
 heart$HeartDisease <- factor(heart$HeartDisease)
 #head(heart)
@@ -27,11 +28,22 @@ heart$HeartDisease <- factor(heart$HeartDisease)
 x <- model.matrix(HeartDisease~., heart)[,-1]
 y <- heart$HeartDisease
 #Finding optimal lambda shrinkage value to reduce error through cross validation
-set.seed(1)
 ```
 
 ```{r}
-rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11))
+set.seed(1)
+rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), ntree = 1000)
 rf.heart
 ```
+
+```{r}
+plot(rf.heart)
+```
+
+
+```{r}
+rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), ntree = 1000, cutoff = c(0.6, 0.4))
+rf.heart
+```
+
 
