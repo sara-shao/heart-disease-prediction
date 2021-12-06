@@ -1,0 +1,53 @@
+---
+title: "Missing Data"
+author: "Ki Hyun"
+date: "12/6/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages}
+library(tidyverse)
+library(mice)
+library(naniar)
+```
+
+```{r data}
+heart <- read.csv(file = 'heart.csv')
+heart <- heart %>% 
+ mutate(Cholesterol = case_when(
+    Cholesterol == 0 ~ NA_integer_,
+    TRUE ~ Cholesterol
+  ),
+  RestingBP = case_when(
+    RestingBP == 0 ~ NA_integer_,
+    TRUE ~ RestingBP
+  ))
+```
+
+```{r missing_data_viz}
+temp <- heart %>% 
+  select(Cholesterol, RestingBP)
+
+gg_miss_upset(temp)
+```
+
+```{r imputation}
+heart <- heart %>% 
+  filter(!(is.na(Cholesterol)&is.na(RestingBP)))
+
+heart.imp.ls <- mice(heart, seed = 1)
+
+heart.imp.1 <- complete(heart.imp.ls, 1)
+heart.imp.2 <- complete(heart.imp.ls, 2)
+heart.imp.3 <- complete(heart.imp.ls, 3)
+heart.imp.4 <- complete(heart.imp.ls, 4)
+heart.imp.5 <- complete(heart.imp.ls, 5)
+```
+
+```{r imputed_vals_viz}
+densityplot(heart.imp.ls)
+```
