@@ -45,6 +45,10 @@ heart <- heart %>%
 heart <- heart %>% 
   filter(Cholesterol != 0) %>% 
   filter(RestingBP!=0)
+set.seed(1)
+training <- sample(dim(heart)[1], 522)
+train <- heart[training, ]
+test <- heart[-training, ]
 ```
 
 ```{r}
@@ -63,8 +67,8 @@ coef(lasso_model)
 
 ```{r}
 
-x <- model.matrix(HeartDisease~.^2, heart)[,-1]
-y <- heart$HeartDisease
+x <- model.matrix(HeartDisease~.^2, train)[,-1]
+y <- train$HeartDisease
 #Finding optimal lambda shrinkage value to reduce error through cross validation
 set.seed(123)
 
@@ -78,9 +82,28 @@ coef(lasso_model)
 ```
 ```{r}
 logistic_mod <- glm(HeartDisease ~ Sex + Age + ChestPainType + RestingBP + Oldpeak + FastingBS+ ST_Slope+ MaxHR + RestingECG + ExerciseAngina + Cholesterol +  Age*Sex + Age*ChestPainType + Age*RestingBP+ Age*Oldpeak+Sex*ChestPainType + Sex*FastingBS+ Sex*Oldpeak + Sex*ST_Slope+ ChestPainType*FastingBS+ ChestPainType*MaxHR + ChestPainType*RestingECG + ChestPainType*ExerciseAngina + ChestPainType*Oldpeak + ChestPainType*ST_Slope + RestingBP*Cholesterol + RestingBP*ExerciseAngina + RestingBP*Oldpeak + RestingBP*ST_Slope + Cholesterol*ExerciseAngina + FastingBS*RestingECG + FastingBS*ST_Slope + RestingECG*ST_Slope + ExerciseAngina*Oldpeak + ExerciseAngina*ST_Slope + Oldpeak*ST_Slope , family = "binomial", 
-     data = heart)
+     data = train)
+
+predprob <- predict(logistic_mod, test, type = "response")
+
+preds <- c()
+for(prob in predprob){
+  if(prob>=.5){
+    preds <- c(preds,1)
+  }
+  else{
+    preds <- c(preds,0)
+  }
+}
 
 
+wrong <- 0
+for(i in 1:length(test$HeartDisease)){
+  if(preds[i]!=test$HeartDisease[i]){
+    wrong = wrong + 1
+  }
+}
+print(wrong/length(test$HeartDisease))
 
 ```
 
