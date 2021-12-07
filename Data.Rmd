@@ -32,6 +32,14 @@ heart$HeartDisease <- factor(heart$HeartDisease)
 #head(heart)
 ```
 
+The plot below shows the spread of our response variable `HeartDisease`.
+```{r}
+c4 = c("#0db7c4b0", "#f24745b9")
+edaOverall <- ggplot(data = heart, mapping = aes(x = HeartDisease)) +
+  geom_bar(fill = c4)
+edaOverall
+```
+
 ```{r}
 eda1 <- ggplot(data = heart, mapping = aes(x = HeartDisease, fill = Sex)) +
   geom_bar(position = "fill")
