@@ -76,4 +76,11 @@ lambda = cv.lasso$lambda.min)
 coef(lasso_model)
 
 ```
+```{r}
+logistic_mod <- glm(HeartDisease ~ Sex + Age + ChestPainType + RestingBP + Oldpeak + FastingBS+ ST_Slope+ MaxHR + RestingECG + ExerciseAngina + Cholesterol +  Age*Sex + Age*ChestPainType + Age*RestingBP+ Age*Oldpeak+Sex*ChestPainType + Sex*FastingBS+ Sex*Oldpeak + Sex*ST_Slope+ ChestPainType*FastingBS+ ChestPainType*MaxHR + ChestPainType*RestingECG + ChestPainType*ExerciseAngina + ChestPainType*Oldpeak + ChestPainType*ST_Slope + RestingBP*Cholesterol + RestingBP*ExerciseAngina + RestingBP*Oldpeak + RestingBP*ST_Slope + Cholesterol*ExerciseAngina + FastingBS*RestingECG + FastingBS*ST_Slope + RestingECG*ST_Slope + ExerciseAngina*Oldpeak + ExerciseAngina*ST_Slope + Oldpeak*ST_Slope , family = "binomial", 
+     data = heart)
+
+
+
+```
 
