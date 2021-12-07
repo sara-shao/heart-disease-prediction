@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(glmnet)
 library(stringr)
+library(bnstruct)
 ```
 
 
@@ -32,6 +33,15 @@ heart %>%
   count(ST_Slope)
 heart %>% 
   count(HeartDisease)
+heart <- heart %>% 
+  mutate(Sex = as.factor(Sex)) %>% 
+  mutate(ChestPainType= as.factor(ChestPainType)) %>% 
+  mutate(RestingECG= as.factor(RestingECG)) %>%
+  mutate(ExerciseAngina = as.factor(ExerciseAngina)) %>%
+  mutate(ST_Slope = as.factor(ST_Slope)) %>%
+  mutate(HeartDisease = as.factor(HeartDisease)) 
+#imputed <- knn.impute(as.matrix(heart),k = 10)
+  
 heart <- heart %>% 
   filter(Cholesterol != 0) %>% 
   filter(RestingBP!=0)
