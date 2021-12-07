@@ -38,14 +38,12 @@ heart <- heart %>%
 ```
 
 ```{r}
-set.seed(1)
-x <- model.matrix(HeartDisease~., heart)[,-1]
-y <- heart$HeartDisease
-#x[y==1,] = x[y==1,] + 1
-#plot(x, col = (3-y))
+#set.seed(1)
+#x <- model.matrix(HeartDisease~., heart)[,-1]
+#y <- heart$HeartDisease
 
-svmfit <- svm(y ~ ., data = heart, kernel = "linear", cost = 10, scale = FALSE)
-summary(svmfit)
+#svmfit <- svm(y ~ ., data = heart, kernel = "linear", cost = 10, scale = FALSE)
+#summary(svmfit)
 ```
 
 
@@ -64,7 +62,7 @@ The code below fits a support vector classifier.
 svm.fit <- svm(HeartDisease ~., data = train, kernel = "linear", cost=0.01)
 summary(svm.fit)
 ```
-There are 720 Support Vectors.
+There are 295 Support Vectors, 148 in Class 0 and 147 in Class 1.
 ```{r}
 svm.pred <- predict(svm.fit, test)
 wrong <- 0
@@ -76,4 +74,148 @@ for (i in 1:length(svm.pred)){
 print(wrong/length(test$HeartDisease))
 ```
 
+The test error rate is 14.3%.
+
+The code below uses CV to find the optimal cost for an svm with a linear kernel.
+
+```{r}
+set.seed(1)
+tune.out = tune(svm, HeartDisease ~ ., data = train, kernel = "linear", ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+summary(tune.out)
+```
+
+The optimal cost is 5.623.
+
+The code below calculates the test error using the optimal cost.
+
+```{r}
+svm.fit = svm(HeartDisease ~ ., kernel = "linear", data = train, cost = tune.out$best.parameters$cost)
+
+svm.pred <- predict(svm.fit, test)
+
+wrong <- 0
+for (i in 1:length(svm.pred)){
+  if (svm.pred[i]!=test$HeartDisease[i]){
+    wrong = wrong + 1
+  }
+}
+print(wrong/length(test$HeartDisease))
+```
+The error rate is 12.05%.
+
+
+END OF LINEAR
+-------------------------------------------------------------------
+BEGINNING OF RADIAL
+
+The code below fits a support vector classifier.
+
+```{r}
+svm.fitradial <- svm(HeartDisease ~., data = train, kernel = "radial")
+summary(svm.fitradial)
+```
+
+There are 233 Support Vectors, with 119 in 0 and 114 in 1.
+
+```{r}
+svm.predradial <- predict(svm.fitradial, test)
+
+wrong <- 0
+for (i in 1:length(svm.predradial)){
+  if (svm.predradial[i]!=test$HeartDisease[i]){
+    wrong = wrong + 1
+  }
+}
+print(wrong/length(test$HeartDisease))
+
+```
+The test error is 12.05%.
+
+```{r}
+set.seed(1)
+tune.out2 = tune(svm, HeartDisease ~ ., data = train, kernel = "radial", ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+summary(tune.out2)
+```
+
+The optimal cost is 5.623. The code below finds the test error of a radial kernel SVM using the optimal cost.
+
+```{r}
+svm.radial3 = svm(HeartDisease ~ ., data = train, kernel = "radial", cost = tune.out2$best.parameters$cost)
+
+svm.predradial <- predict(svm.radial3, test)
+
+wrong <- 0
+for (i in 1:length(svm.predradial)){
+  if (svm.predradial[i]!=test$HeartDisease[i]){
+    wrong = wrong + 1
+  }
+}
+print(wrong/length(test$HeartDisease))
+
+```
+The test error is 12.05%.
+
+END OF RADIAL
+-------------------------------------------------------------------
+BEGINNING OF POLYNOMIAL
+
+```{r}
+svm.fitpoly <- svm(HeartDisease ~., data = train, kernel = "poly", degree = 2)
+summary(svm.fitpoly)
+```
+
+There are 279 Support Vectors, 139 0 and 140 1.
+
+```{r}
+svm.predpoly <- predict(svm.fitpoly, test)
+
+wrong <- 0
+for (i in 1:length(svm.predpoly)){
+  if (svm.predpoly[i]!=test$HeartDisease[i]){
+    wrong = wrong + 1
+  }
+}
+print(wrong/length(test$HeartDisease))
+```
+
+The test error is 14.7%.
+
+The code below find teh optimal cost
+
+```{r}
+set.seed(1)
+tune.out = tune(svm, HeartDisease ~ ., data = train, kernel = "poly", degree = 2,ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+summary(tune.out)
+```
+
+The optimal cost is 1.778. 
+
+The code below calculates the test error using the optimal cost.
+
+```{r}
+svm.poly3 = svm(HeartDisease ~ ., data = train, kernel = "poly", degree = 2, cost = tune.out$best.parameters$cost)
+
+test.pred3 = predict(svm.poly3, test)
+
+wrong <- 0
+for (i in 1:length(test.pred3)){
+  if (test.pred3[i]!=test$HeartDisease[i]){
+    wrong = wrong + 1
+  }
+}
+print(wrong/length(test$HeartDisease))
+```
+
+The test error is 12.95%.
+
+--------------------------------------------------------------------
+CONCLUSION
+
+Linear Kernel w/Optimal Cost: 12.05%
+
+Radial Kernel w/Optimal Cost: 12.05%
+
+Polynomial Kernel w/ Optimal Cost: 12.95%
+
+---------------------------------------------------------------------
 
