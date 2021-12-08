@@ -1,0 +1,107 @@
+---
+title: "CV_template"
+author: "Erie Seong Ho Han"
+date: "12/6/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+library(glmnet)
+library(stringr)
+library(bnstruct)
+library(e1071)
+```
+
+## Including Plots
+
+```{r}
+heart <- read.csv(file = 'heart.csv')
+heart %>% 
+  count(Cholesterol)
+heart %>% 
+  count(RestingBP)
+heart %>% 
+  count(Age)
+heart %>% 
+  count(MaxHR)
+heart %>% 
+  count(Oldpeak)
+heart %>% 
+  count(ST_Slope)
+heart %>% 
+  count(HeartDisease)
+heart <- heart %>% 
+  filter(Cholesterol != 0) %>% 
+  filter(RestingBP!=0) %>% 
+  mutate(Sex = as.factor(Sex)) %>% 
+  mutate(ChestPainType= as.factor(ChestPainType)) %>% 
+  mutate(RestingECG= as.factor(RestingECG)) %>%
+  mutate(ExerciseAngina = as.factor(ExerciseAngina)) %>%
+  mutate(ST_Slope = as.factor(ST_Slope)) %>%
+  mutate(HeartDisease = as.factor(HeartDisease)) 
+
+```
+
+```{r, echo = TRUE}
+set.seed(1)
+shuffled_heart <- heart[sample(nrow(heart)),]
+folds <- cut(seq(1,nrow(shuffled_heart)),breaks=5,labels=FALSE)
+```
+
+
+```{r warning = FALSE}
+# error
+misclassfication.linear <- rep(0, 5)
+misclassfication.poly <- rep(0, 5)
+misclassfication.radial <- rep(0, 5)
+
+get_misclassification <- function(bestmod, X_test, y_test) {
+  prediction <- predict(bestmod, X_test)
+  tab <- table(y_test, prediction)
+  misclassification_rate <- 1 - sum(diag(tab))/sum(tab)
+  return(misclassification_rate)
+}
+
+# Cross validation
+for(i in 1:5){
+  
+   #Segment your data by fold using the which() function 
+    testIndexes <- which(folds==i,arr.ind=TRUE)
+    testData <- shuffled_heart[testIndexes, ]
+    y.test <- testData$HeartDisease
+    X.test <- testData[, -12]
+    trainData <- shuffled_heart[-testIndexes, ]
+    
+  # Need to choose parameters
+   set.seed(1)
+   tune.out.linear <- tune(svm, HeartDisease ~ ., data = trainData, kernel = "linear",
+                 ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+   tune.out.poly <- tune(svm, HeartDisease ~ ., data = trainData, kernel = "poly", degree=2,
+                 ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+   tune.out.radial <- tune(svm, HeartDisease ~ ., data = trainData, kernel = "radial",
+                 ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+   
+   bestmod.linear <- tune.out.linear$best.model
+   bestmod.poly <- tune.out.poly$best.model
+   bestmod.radial <- tune.out.radial$best.model
+   
+   misclassfication.linear[i] = get_misclassification(bestmod.linear, X.test, y.test)
+   misclassfication.poly[i] = get_misclassification(bestmod.poly, X.test, y.test)
+   misclassfication.radial[i] = get_misclassification(bestmod.radial, X.test, y.test)
+ }
+
+misclassfication.linear
+misclassfication.poly
+misclassfication.radial
+```
+```{r}
+mean(misclassfication.linear)
+mean(misclassfication.poly)
+mean(misclassfication.radial)
+```
