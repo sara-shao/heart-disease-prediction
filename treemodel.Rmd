@@ -27,7 +27,6 @@ heart$HeartDisease <- factor(heart$HeartDisease)
 ```{r}
 x <- model.matrix(HeartDisease~., heart)[,-1]
 y <- heart$HeartDisease
-#Finding optimal lambda shrinkage value to reduce error through cross validation
 ```
 
 ```{r}
