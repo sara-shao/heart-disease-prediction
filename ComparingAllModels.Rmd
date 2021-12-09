@@ -1,5 +1,7 @@
 ---
-title: "AlexDoc"
+title: "Ensemble"
+author: "Dani Trejo"
+date: "12/8/2021"
 output: html_document
 ---
 
@@ -7,31 +9,17 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
+### Downloading and prepping the data
 ```{r}
 library(tidyverse)
-library(glmnet)
-library(bnstruct)
-```
-
-
-```{r}
+library(patchwork)
+library(randomForest)
+library(pROC)
 heart <- read.csv(file = 'heart.csv')
-heart %>% 
-  count(Cholesterol)
-heart %>% 
-  count(RestingBP)
-heart %>% 
-  count(Age)
-heart %>% 
-  count(MaxHR)
-heart %>% 
-  count(Oldpeak)
-heart %>% 
-  count(ST_Slope)
-heart %>% 
-  count(HeartDisease)
+heart$HeartDisease <- factor(heart$HeartDisease)
+#head(heart)
+
+#test on 10%
 heart <- heart %>% 
   mutate(Sex = as.factor(Sex)) %>% 
   mutate(ChestPainType= as.factor(ChestPainType)) %>% 
@@ -39,65 +27,58 @@ heart <- heart %>%
   mutate(ExerciseAngina = as.factor(ExerciseAngina)) %>%
   mutate(ST_Slope = as.factor(ST_Slope)) %>%
   mutate(HeartDisease = as.factor(HeartDisease)) 
-#imputed <- knn.impute(as.matrix(heart),k = 10)
   
 heart <- heart %>% 
   filter(Cholesterol != 0) %>% 
   filter(RestingBP!=0)
 
 set.seed(1)
-training <- sample(dim(heart)[1], 522)
-train <- heart[training, ]
-test <- heart[-training, ]
+dt = sort(sample(nrow(heart), nrow(heart)*.9))
+train<-heart[dt,]
+test<-heart[-dt,]
+
+x.train <- model.matrix(HeartDisease~., train)[,-1]
+y.train <- train$HeartDisease
+
+x.test <- model.matrix(HeartDisease~., test)[,-1]
+y.test <- test$HeartDisease
 ```
 
+
+### Fitting the Tree model
 ```{r}
-x <- model.matrix(HeartDisease~., heart)[,-1]
-y <- heart$HeartDisease
-#Finding optimal lambda shrinkage value to reduce error through cross validation
 set.seed(1)
-
-
-cv.lasso <- cv.glmnet(x, y, alpha = 1, family = "binomial")
-#Creation of lasso model and outputting regression coefficients
-lasso_model <- glmnet(x, y, alpha = 1, family = "binomial",
-lambda = cv.lasso$lambda.min)
-coef(lasso_model)
+rf.heart <- randomForest(HeartDisease ~ ., data = train, mtry = sqrt(11), ntree = 1000)
+rf.heart
 ```
 
+### Fitting the Logistic Regression from the Lasso
 ```{r}
-
-x <- model.matrix(HeartDisease~.^2, train)[,-1]
-y <- train$HeartDisease
-#Finding optimal lambda shrinkage value to reduce error through cross validation
-set.seed(123)
-
-
-cv.lasso <- cv.glmnet(x, y, alpha = 1, family = "binomial")
-#Creation of lasso model and outputting regression coefficients
-lasso_model <- glmnet(x, y, alpha = 1, family = "binomial",
-lambda = cv.lasso$lambda.min)
-coef(lasso_model)
-
-```
-
-```{r}
+set.seed(1)
 logistic_mod <- glm(HeartDisease ~ Sex + Age + ChestPainType + RestingBP + Oldpeak + FastingBS+ ST_Slope+ MaxHR + RestingECG + ExerciseAngina + Cholesterol +  Age*Sex + Age*ChestPainType + Age*RestingBP+ Age*Oldpeak+Sex*ChestPainType + Sex*FastingBS+ Sex*Oldpeak + Sex*ST_Slope+ ChestPainType*FastingBS+ ChestPainType*MaxHR + ChestPainType*RestingECG + ChestPainType*ExerciseAngina + ChestPainType*Oldpeak + ChestPainType*ST_Slope + RestingBP*Cholesterol + RestingBP*ExerciseAngina + RestingBP*Oldpeak + RestingBP*ST_Slope + Cholesterol*ExerciseAngina + FastingBS*RestingECG + FastingBS*ST_Slope + RestingECG*ST_Slope + ExerciseAngina*Oldpeak + ExerciseAngina*ST_Slope + Oldpeak*ST_Slope , family = "binomial", 
      data = train)
+```
 
-predprob <- predict(logistic_mod, test, type = "response")
+### Fitting the SVM model
+```{r}
+set.seed(1)
+#insert best svm here
+```
 
-preds <- c()
-for(prob in predprob){
-  if(prob>=.5){
-    preds <- c(preds,1)
-  }
-  else{
-    preds <- c(preds,0)
-  }
-}
+## Calling predict on each model
+```{r}
+#Tree
+tree.predictions <- predict(rf.heart, x.test)
+print(tree.predictions)
+
+#Logistic
+log.predictions <- predict(logistic_mod, x.test, type = "response")
+print(log.predictions)
+```
 
 
+### 
+```{r}
 wrong <- 0
 for(i in 1:length(test$HeartDisease)){
   if(preds[i]!=test$HeartDisease[i]){
@@ -105,6 +86,5 @@ for(i in 1:length(test$HeartDisease)){
   }
 }
 print(wrong/length(test$HeartDisease))
-
 ```
 
