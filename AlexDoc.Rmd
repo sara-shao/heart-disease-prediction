@@ -109,3 +109,12 @@ summary(logistic_mod)
 
 ```
 
+```{r}
+###trying backwards selection
+fullmod <- glm(HeartDisease ~.^2,family="binomial",data = heart)
+
+selectedmod <- step(fullmod,direction="backward", trace = FALSE)
+summary(selectedmod)
+```
+
+
