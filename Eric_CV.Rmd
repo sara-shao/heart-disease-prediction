@@ -15,12 +15,13 @@ library(tidyverse)
 library(glmnet)
 library(stringr)
 library(bnstruct)
+library(randomForest)
 library(e1071)
 ```
 
 ## Including Plots
 
-```{r}
+```{r message = FALSE}
 heart <- read.csv(file = 'heart.csv')
 heart %>% 
   count(Cholesterol)
@@ -104,4 +105,110 @@ misclassfication.radial
 mean(misclassfication.linear)
 mean(misclassfication.poly)
 mean(misclassfication.radial)
+```
+linear SVM has the best estimated test accuracy on average.
+
+```{r}
+# Tuning linear SVM
+tune.out.linear <- tune(svm, HeartDisease ~ ., data = heart, kernel = "linear",
+                 ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+bestmod.linear <- tune.out.linear$best.model
+bestmod.param <- tune.out.linear$best.parameters
+bestmod.linear
+bestmod.param
+```
+
+Best hyperparameter is $0.3152278 = 10^{-0.5}$
+
+
+
+---------------
+CV comparing all
+
+```{r}
+# error
+misclassfication.svm <- rep(0, 5)
+misclassifcation.rf <- rep(0, 5)
+misclassfication.glm <- rep(0, 5)
+misclassification.final <- rep(0, 5)
+
+
+get_misclassification_with_prediction <- function(prediction, y_test) {
+  tab <- table(y_test, prediction)
+  misclassification_rate <- 1 - sum(diag(tab))/sum(tab)
+  return(misclassification_rate)
+}
+
+# Cross validation
+for(i in 1:5){
+  
+   #Segment your data by fold using the which() function 
+    testIndexes <- which(folds==i,arr.ind=TRUE)
+    testData <- shuffled_heart[testIndexes, ]
+    y.test <- testData$HeartDisease
+    X.test <- testData[, -12]
+    trainData <- shuffled_heart[-testIndexes, ]
+    
+  # Need to choose parameters
+   set.seed(1)
+   svm.linear <- svm(HeartDisease ~ ., kernel = "linear", data = trainData, cost = 0.3152278)
+   rf.fit <- randomForest(HeartDisease ~ ., data = trainData, mtry = sqrt(11), ntree = 1000)
+   glm.fit <- glm(HeartDisease ~ Sex + Age + ChestPainType + RestingBP + Oldpeak + FastingBS+ ST_Slope+ MaxHR + RestingECG + ExerciseAngina + Cholesterol +  Age*Sex + Age*ChestPainType + Age*RestingBP+ Age*Oldpeak+Sex*ChestPainType + Sex*FastingBS+ Sex*Oldpeak + Sex*ST_Slope+ ChestPainType*FastingBS+ ChestPainType*MaxHR + ChestPainType*RestingECG + ChestPainType*ExerciseAngina + ChestPainType*Oldpeak + ChestPainType*ST_Slope + RestingBP*Cholesterol + RestingBP*ExerciseAngina + RestingBP*Oldpeak + RestingBP*ST_Slope + Cholesterol*ExerciseAngina + FastingBS*RestingECG + FastingBS*ST_Slope + RestingECG*ST_Slope + ExerciseAngina*Oldpeak + ExerciseAngina*ST_Slope + Oldpeak*ST_Slope , family = "binomial", 
+     data = trainData)
+   
+   
+   
+  prediction.svm <- predict(svm.linear, X.test)
+  prediction.rf <- predict(rf.fit, X.test)
+  
+  # prediction with glm returns prediction for the logit, thus it seems that it's necessary
+  # to convert that to the labels we need manually
+  prediction.glm <- predict(glm.fit, X.test, type="response")
+  for(j in 1:length(prediction.glm)) {
+    if(prediction.glm[j] < 0.5) {
+      prediction.glm[j] = 0
+    }
+    else {
+      prediction.glm[j] = 1
+    }
+  }
+  
+  prediction.total <- prediction.glm
+  
+  #Compute the final model
+  for(j in 1:length(prediction.total)) {
+    if(prediction.svm[j] == 1) {
+      prediction.total[j] = 1
+    }
+    if(prediction.rf[j]== 1) {
+      prediction.total[j] = prediction.total[j] +  1
+    }
+    if(prediction.glm[j] == 1) {
+      prediction.total[j] = prediction.total[j] +  1
+    }
+    if(prediction.total[j] > 1.5) {
+      prediction.total[j] = 1
+    }
+  }
+   
+   misclassfication.svm[i] = get_misclassification_with_prediction(prediction.svm, y.test)
+   misclassifcation.rf[i] = get_misclassification_with_prediction(prediction.rf, y.test)
+   misclassfication.glm[i] = get_misclassification_with_prediction(prediction.glm, y.test)
+   misclassification.final[i] = get_misclassification_with_prediction(prediction.total, y.test)
+}
+```
+
+```{r}
+misclassfication.svm
+misclassifcation.rf
+misclassfication.glm
+misclassification.final
+```
+
+```{r}
+mean(misclassfication.svm)
+mean(misclassifcation.rf)
+mean(misclassfication.glm)
+mean(misclassification.final)
+
 ```
