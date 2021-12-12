@@ -11,6 +11,10 @@ knitr::opts_chunk$set(echo = FALSE,
                      fig.align = "center",
                      fig.width=5, 
                      fig.height=3)
+library(randomForest)
+library(pROC)
+heart <- read.csv(file = 'heart.csv')
+heart$HeartDisease <- factor(heart$HeartDisease)
 ```
 
 ## I. Introduction
@@ -58,5 +62,28 @@ $$K(x_i,x_{i'})=(1+\sum_{j=1}^{p}x_{ij}x_{i'j})^d$$
 
 
 ## IV. Results
+
+### Lasso:
+
+### Random Forest:
+Here, we fitted a random forest on the data. 
+
+```{r, echo=FALSE}
+set.seed(1)
+rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), ntree = 1000)
+rf.heart
+```
+Our confusion matrix tells us that there is a 0.168 false positive rate and a 0.094 false negative rate. This means that 16.8% of the time, our model predicts someone who doesn’t have heart disease to have heart disease. At the same time, 9.4% of the time, our model predicts someone who has heart disease to not have heart disease. It is better in this scenario that our false positive rate is higher than the false negative rate because it is better that we over predict people having heart disease than to under predict. If we over predict, people who didn't have heart disease but thought they did would get a second opinion and eventually realize that they don't actually have the disease. If we under predicted, then people who have actually heart disease wouldn't get the necessary treatment and may have worsened affects. Despite the false negative rate being quite high, we decided to keep the default cutoff value of 0.5 because without having done a lot more in-depth research on this medical topic, it would be fairly arbitrary of us to choose another cut off point. Intuitively, it would make sense for us to choose a higher cutoff value because there is a heavier social penalty for a high false negative value as compared to a false positive value
+
+We can see in the plot here that 
+```{r}
+plot(rf.heart)
+legend("top", colnames(rf.heart$err.rate),col=1:6,cex=0.8,fill=1:6)
+
+```
+
+
+### SVM:
+
 ## V. Conclusion
 
