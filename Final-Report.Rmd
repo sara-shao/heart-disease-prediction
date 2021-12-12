@@ -38,7 +38,7 @@ There were a total of 170 observations with missing values in Cholesterol and Re
 | MaxHR          | Maximum heart rate achieved [Numeric value between 60 and 202]                                                                                                                                                                             |      |   |   |
 | ExerciseAngina | Exercise-induced angina [Y: Yes, N: No]                                                                                                                                                                                                    |      |   |   |
 | Oldpeak        | [Numeric value measured in depression]                                                                                                                                                                                                     |      |   |   |
-| HeartDisease   | Output class [1: heart disease, 0: Normal]                                                                                                                                                                                                 |      |   |   |
+| HeartDisease   | Output class [1: heart disease, 0: Normal]  
 
 ## III. Methodology 
 ## IV. Results

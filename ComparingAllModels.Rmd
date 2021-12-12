@@ -63,16 +63,17 @@ logistic_mod <- glm(HeartDisease ~ Sex + Age + ChestPainType + RestingBP + Oldpe
 ```{r}
 set.seed(1)
 #insert best svm here
+x.test
 ```
 
 ## Calling predict on each model
 ```{r}
 #Tree
-tree.predictions <- predict(rf.heart, x.test)
+tree.predictions <- predict(rf.heart, test)
 print(tree.predictions)
 
 #Logistic
-log.predictions <- predict(logistic_mod, x.test, type = "response")
+log.predictions <- predict(logistic_mod, test, type = "response")
 print(log.predictions)
 ```
 
