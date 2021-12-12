@@ -1,0 +1,25 @@
+---
+title: "FixingDataTable"
+author: "Dani Trejo"
+date: "12/12/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+| Variables      | Description  | Value |
+|-------------|------------------------------|----------------------------------------------|
+| Age            | Age of the patient in years                                          | Numeric Value
+| Sex            | Sex of the patient                                             |[M/F] |
+| ChestPainType  | Chest pain type | [TA: Typical Angina, ATA: Atypical Angina, NAP: Non-Anginal Pain, ASY: Asymptomatic]|
+| RestingBP      | Resting blood pressure |[mm Hg]                                       |
+| Cholesterol    | Serum cholesterol |[mm/dl]                                            |
+| FastingBS      | Fasting blood sugar | [1: if FastingBS > 120 mg/dl, 0: otherwise]      |
+| RestingECG     | Resting electrocardiogram results |[Normal: Normal, ST: having ST-T wave abnormality, LVH: showing probable or definite left ventricular hypertrophy] |
+| MaxHR          | Maximum heart rate achieved | [Numeric value between 60 and 202]   |
+| ExerciseAngina | Exercise-induced angina | [Y: Yes, N: No]            |
+| Oldpeak        | The level of exercise relative to rest |Numeric value  |
+| HeartDisease   | Output class denoting if patient has Heart Disease| [1: heart disease, 0: Normal]  |
