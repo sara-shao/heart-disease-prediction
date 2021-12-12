@@ -17,7 +17,7 @@ library(naniar)
 
 ```{r data}
 heart <- read.csv(file = 'heart.csv')
-heart <- heart %>% 
+heart.full <- heart %>% 
  mutate(Cholesterol = case_when(
     Cholesterol == 0 ~ NA_integer_,
     TRUE ~ Cholesterol
@@ -29,17 +29,17 @@ heart <- heart %>%
 ```
 
 ```{r missing_data_viz}
-temp <- heart %>% 
+temp <- heart.full %>% 
   select(Cholesterol, RestingBP)
 
 gg_miss_upset(temp)
 ```
 
 ```{r imputation}
-heart <- heart %>% 
+heart.full <- heart.full %>% 
   filter(!(is.na(Cholesterol)&is.na(RestingBP)))
 
-heart.imp.ls <- mice(heart, seed = 1)
+heart.imp.ls <- mice(heart.full, seed = 1)
 
 heart.imp.1 <- complete(heart.imp.ls, 1)
 heart.imp.2 <- complete(heart.imp.ls, 2)
@@ -50,4 +50,8 @@ heart.imp.5 <- complete(heart.imp.ls, 5)
 
 ```{r imputed_vals_viz}
 densityplot(heart.imp.ls)
+```
+
+```{r update_data}
+
 ```
