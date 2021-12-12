@@ -45,6 +45,66 @@ There were a total of 170 observations with missing values in Cholesterol and Re
 | Oldpeak        | [Numeric value measured in depression]                                                                                                                                                                                                     |      |   |   |
 | HeartDisease   | Output class [1: heart disease, 0: Normal]                                                                                                                                                                                                 |      |   |   |
 
+### Exploratory Data Analysis
+
+```{r, include =FALSE}
+library(tidyverse)
+library(patchwork)
+heart <- read.csv(file = 'heart.csv')
+heart$HeartDisease <- factor(heart$HeartDisease)
+#head(heart)
+```
+
+The plot below shows the spread of our response variable `HeartDisease`.
+```{r, include = FALSE}
+c4 = c("#0db7c4b0", "#f24745b9")
+edaOverall <- ggplot(data = heart, mapping = aes(x = HeartDisease)) +
+  geom_bar(fill = c4)
+edaOverall
+```
+
+```{r}
+eda1 <- ggplot(data = heart, mapping = aes(x = HeartDisease, fill = Sex)) +
+  geom_bar(position = "fill")
+
+eda2 <- ggplot(data = heart, mapping = aes(x = HeartDisease, fill = ChestPainType)) +
+  geom_bar(position = "fill")
+
+eda3 <- ggplot(data = heart, mapping = aes(x = HeartDisease, fill = ExerciseAngina)) +
+  geom_bar(position = "fill")
+
+eda4 <- ggplot(data = heart, mapping = aes(x = HeartDisease, fill = ST_Slope)) +
+  geom_bar(position = "fill")
+
+(eda1+eda2) / (eda3+eda4)
+```
+
+The above 4 categorical variables, sex, chest pain types, exercise-induced angina, and ST slope seem to have some relationship with heart disease incidence, so these variables will be good to look out for in our final model.
+
+```{r, include = FALSE}
+eda1 <- ggplot(data = heart, mapping = aes(x = HeartDisease, y = Age)) +
+  geom_boxplot()
+
+eda2 <- ggplot(data = heart, mapping = aes(x = HeartDisease, y = MaxHR)) +
+  geom_boxplot()
+
+eda3 <- ggplot(data = heart, mapping = aes(x = HeartDisease, y = Cholesterol)) +
+  geom_boxplot()
+
+eda4 <- ggplot(data = heart, mapping = aes(x = HeartDisease, y = FastingBS)) +
+  geom_boxplot()
+
+eda5 <- ggplot(data = heart, mapping = aes(x = HeartDisease, y = Oldpeak)) +
+  geom_boxplot()
+
+(eda1+eda2+eda3) / (eda4+eda5)
+```
+
+It seems that these above 5 numeric variables, age, max heart rate, cholesterol, fasting blood sugar, and oldpeak may have a relationship with heart heart disease and would be worth exploring in our models. 
+
+
+
+
 ## III. Methodology 
 
 Our first model is a logistic regression model. The logistic regression model is formulated by the equation:
