@@ -37,19 +37,19 @@ knitr::opts_chunk$set(echo = FALSE,
   
 There were a total of 170 observations with missing values in Cholesterol and Resting Blood Pressure(BP). (Cholesterol value of 0 and Resting Blood Pressure value of 0 are considered missing since these are impossible to reach in real life). The visualizations of the missing values in [Table 00] shows that there are 170 observations with missing Cholesterol value and 1 observation with missing Resting BP value. For the one observation with missing Resting BP, it also had missing Cholesterol value. This observation was disregarded for analysis under Missing Completely at Random (MCAR) assumption. For the 169 observations with missing Cholesterol values, imputations were conducted based on Missing at Random (MAR) assumption. Multiple Imputation using Chained Equation (MICE) in R was used to impute the values. Five chains of imputations were conducted for Cholesterol with each chain using the default method of predictive mean matching (ppm) method since Cholesterol was a numerical variable.
 
-| Variables      | Description                                                                                                                                                                                                                                | Type |   |   |
-|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------|---|---|
-| Age            | Age of the patient in years                                                                                                                                                                                                                |      |   |   |
-| Sex            | Sex of the patient [M/F]                                                                                                                                                                                                                   |      |   |   |
-| ChestPainType  | Chest pain type [TA: Typical Angina, ATA: Atypical Angina, NAP: Non-Anginal Pain, ASY: Asymptomatic]                                                                                                                                       |      |   |   |
-| RestingBP      | Resting blood pressure [mm Hg]                                                                                                                                                                                                             |      |   |   |
-| Cholesterol    | Serum cholesterol [mm/dl]                                                                                                                                                                                                                  |      |   |   |
-| FastingBS      | Fasting blood sugar [1: if FastingBS > 120 mg/dl, 0: otherwise]                                                                                                                                                                            |      |   |   |
-| RestingECG     | Resting electrocardiogram results [Normal: Normal, ST: having ST-T wave abnormality (T wave inversions and/or ST elevation or depression of > 0.05 mV), LVH: showing probable or definite left ventricular hypertrophy by Estes' criteria] |      |   |   |
-| MaxHR          | Maximum heart rate achieved [Numeric value between 60 and 202]                                                                                                                                                                             |      |   |   |
-| ExerciseAngina | Exercise-induced angina [Y: Yes, N: No]                                                                                                                                                                                                    |      |   |   |
-| Oldpeak        | [Numeric value measured in depression]                                                                                                                                                                                                     |      |   |   |
-| HeartDisease   | Output class [1: heart disease, 0: Normal]  
+| Variables      | Description  | Value |
+|-------------|------------------------------|----------------------------------------------|
+| Age            | Age of the patient in years                                          | Numeric Value
+| Sex            | Sex of the patient                                             |[M/F] |
+| ChestPainType  | Chest pain type | [TA: Typical Angina, ATA: Atypical Angina, NAP: Non-Anginal Pain, ASY: Asymptomatic]|
+| RestingBP      | Resting blood pressure |[mm Hg]                                       |
+| Cholesterol    | Serum cholesterol |[mm/dl]                                            |
+| FastingBS      | Fasting blood sugar | [1: if FastingBS > 120 mg/dl, 0: otherwise]      |
+| RestingECG     | Resting electrocardiogram results |[Normal: Normal, ST: having ST-T wave abnormality, LVH: showing probable or definite left ventricular hypertrophy] |
+| MaxHR          | Maximum heart rate achieved | [Numeric value between 60 and 202]   |
+| ExerciseAngina | Exercise-induced angina | [Y: Yes, N: No]            |
+| Oldpeak        | The level of exercise relative to rest |Numeric value  |
+| HeartDisease   | Output class denoting if patient has Heart Disease| [1: heart disease, 0: Normal]  |
 
 ### Exploratory Data Analysis
 
