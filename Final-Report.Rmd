@@ -14,6 +14,8 @@ knitr::opts_chunk$set(echo = FALSE,
                      fig.height=3)
 library(randomForest)
 library(pROC)
+library(stringr)
+library(e1071)
 heart <- read.csv(file = 'heart.csv')
 heart$HeartDisease <- factor(heart$HeartDisease)
 ```
@@ -149,7 +151,7 @@ eda4 <- ggplot(data = heart, mapping = aes(x = HeartDisease, fill = ST_Slope)) +
 (eda1+eda2) / (eda3+eda4)
 ```
 
-The above 4 categorical variables, sex, chest pain types, exercise-induced angina, and ST slope seem to have some relationship with heart disease incidence, so these variables will be good to look out for in our final model. From the plots above, there appears to be some relationship between heart disease incidence and these four categorical variables, so these variables will be good to look out for in the final results. From the exploratory data analysis, it appears that a positive diagnosis for CVD tends to occur with the sex of a patient being male, asymptomatic chest pain, the presence of exercise-induced angina, and a flat slope of the peak exercise ST segment.
+The above 4 categorical variables, sex, chest pain types, exercise-induced angina, and ST slope seem to have some relationship with heart disease incidence, so these variables will be good to look out for in our final model. From the exploratory data analysis, it appears that a positive diagnosis for CVD tends to occur with the sex of a patient being male, asymptomatic chest pain, the presence of exercise-induced angina, and a flat slope of the peak exercise ST segment.
 
 Next, we plotted the relationship between the incidence of heart disease and five numeric variables (`Age`, `MaxHR`, `Cholesterol`, `FastingBS`, and `Oldpeak`).
 
@@ -176,15 +178,63 @@ From the exploratory data analysis, it appears that the incidence of heart disea
 
 ## III. Methodology 
 
+### Logistic Regression
 Our first model is a logistic regression model. The logistic regression model is formulated by the equation:
 $$\log(\frac{P}{1-P}) = \beta_0+\beta_1X_1+\beta_2X_2+...+\beta_kX_k$$
 Using logistic regression lends itself well to inference and classification goals, and using the Lasso method will perform model selection. Therefore, we decided to use a logistic lasso regression. This is a logistic regression with shrinkage applied to the coefficients of the logistic regression. The amount of shrinkage is controlled by a shrinkage parameter lambda, and in lasso shrinkage, the coefficients are able to be shrunk to 0, which means that lasso can perform variable selection. We used the glmnet package to fit the lasso regression model. We used cross-validation to determine the lambda value that results in the lowest CV error, and then fitted the lasso regression model with the selected lambda value. We then used any active main effects, and interaction effects with non-zero values for any level to fit the final logistic regression using the glm() function. Even though many of the main effects for the logistic regression were not active (had coefficient values of 0), we made sure to include any main effects associated with the active interaction effects due to the hierarchy principle. 
 
-Our second model uses a random forest. With random forests, we fit a large number of binary decision trees, each on a bagged set of data and each with a random subset of predictors, then average the trees to get a final prediction. By using random subsets of predictors, we decorrelate the trees and reduce the variance compared to other methods like bagging. The random forest method yields itself well to the project goals at hand because of the categorical and binary nature of the outcomes we’re trying to predict. We built a random forest of 1000 trees built off of bootstrapped Heart Data. We specified number of predictors sampled for spitting at each node as sqrt(11) ~ 3. We chose sqrt(11) since this is the industry-standard for classification. We chose 1000 trees in order to lower our type 2 error, as we can see in our error plot. 
+### Random Forest
+Our second model uses a random forest. With random forests, we fit a large number of binary decision trees, each on a bagged set of data and each with a random subset of predictors, then average the trees to get a final prediction. By using random subsets of predictors, we decorrelate the trees and reduce the variance compared to other methods like bagging. The random forest method yields itself well to the project goals at hand because of the categorical and binary nature of the outcomes we’re trying to predict. We built a random forest of 1000 trees built off of bootstrapped Heart Data. We specified number of predictors sampled for spitting at each node as sqrt(11) ~ 3. We chose sqrt(11) since this is the industry-standard for classification. We chose 650 trees in order to lower our false negative rate, as we can see in our error plot. 
 
+```{r}
+x <- model.matrix(HeartDisease~., heart)[,-1]
+y <- heart$HeartDisease
+```
+
+```{r, echo=FALSE, fig.height=4, fig.width=6}
+set.seed(1)
+rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), ntree = 1000)
+
+plot(rf.heart, xlim = c(100,1000), ylim = c(0.12,0.16))
+legend("top", colnames(rf.heart$err.rate),col=1:6,cex=0.8,fill=1:6)
+
+set.seed(1)
+rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), ntree = 650)
+rf.heart
+```
+
+### SVM
 Finally, our third model uses a Support Vector Machine (SVM). An SVM uses kernels to provide a flexible classification model. It separates the domain of the data with the goal maximizing the margin distance while allowing for a small number of misclassified training points. Although SVMs are not very interpretable and therefore wouldn’t fit our inference goals, they tend to yield high prediction accuracy and work well with categorical response variables, so we fit an SVM for prediction purposes to compare with our other models. The cost tuning parameters for our SVM models are determined using cross validation, and the best kernel is determined at the end based on the misclassification error from a 70-30 training-test split. The best kernel ended up being a tie between the linear and radial kernals, so we chose the linear kernel for parity. The equation for the linear kernel is:
 
 $$K(x_i,x_{i'})=(1+\sum_{j=1}^{p}x_{ij}x_{i'j})^d$$
+
+```{r}
+set.seed(1)
+training <- sample(dim(heart)[1], 522)
+train <- heart[training, ]
+test <- heart[-training, ]
+```
+
+```{r}
+set.seed(1)
+tune.out = tune(svm, HeartDisease ~ ., data = train, kernel = "linear", ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+```
+
+```{r}
+svm.fit = svm(HeartDisease ~ ., kernel = "linear", data = train, cost = tune.out$best.parameters$cost)
+summary(svm.fit)
+
+svm.pred <- predict(svm.fit, test)
+
+wrong <- 0
+for (i in 1:length(svm.pred)){
+  if (svm.pred[i]!=test$HeartDisease[i]){
+    wrong = wrong + 1
+  }
+}
+print(wrong/length(test$HeartDisease))
+```
+Our final SVM model uses a linear kernal with a cost of 5.623. The error rate for this model is 12.05%.
 
 
 ## IV. Results
@@ -192,21 +242,7 @@ $$K(x_i,x_{i'})=(1+\sum_{j=1}^{p}x_{ij}x_{i'j})^d$$
 ### Lasso:
 
 ### Random Forest:
-Here, we fitted a random forest on the data. 
-
-```{r, echo=FALSE}
-set.seed(1)
-rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), ntree = 1000)
-rf.heart
-```
-Our confusion matrix tells us that there is a 0.168 false positive rate and a 0.094 false negative rate. This means that 16.8% of the time, our model predicts someone who doesn’t have heart disease to have heart disease. At the same time, 9.4% of the time, our model predicts someone who has heart disease to not have heart disease. It is better in this scenario that our false positive rate is higher than the false negative rate because it is better that we over predict people having heart disease than to under predict. If we over predict, people who didn't have heart disease but thought they did would get a second opinion and eventually realize that they don't actually have the disease. If we under predicted, then people who have actually heart disease wouldn't get the necessary treatment and may have worsened affects. Despite the false negative rate being quite high, we decided to keep the default cutoff value of 0.5 because without having done a lot more in-depth research on this medical topic, it would be fairly arbitrary of us to choose another cut off point. Intuitively, it would make sense for us to choose a higher cutoff value because there is a heavier social penalty for a high false negative value as compared to a false positive value
-
-We can see in the plot here that 
-```{r}
-plot(rf.heart)
-legend("top", colnames(rf.heart$err.rate),col=1:6,cex=0.8,fill=1:6)
-
-```
+Our confusion matrix tells us that there is a 0.168 false positive rate and a 0.094 false negative rate. This means that 16.8% of the time, our model predicts someone who doesn’t have heart disease to have heart disease. At the same time, 9.4% of the time, our model predicts someone who has heart disease to not have heart disease. It is better in this scenario that our false positive rate is higher than the false negative rate because it is better that we over predict people having heart disease than to under predict. If we over predict, people who didn't have heart disease but thought they did would get a second opinion and eventually realize that they don't actually have the disease. If we under predicted, then people who have actually heart disease wouldn't get the necessary treatment and may have worsened affects. Despite the false negative rate being quite high, we decided to keep the default cutoff value of 0.5 because without having done a lot more in-depth research on this medical topic, it would be fairly arbitrary of us to choose another cut off point. Intuitively, it would make sense for us to choose a higher cutoff value because there is a heavier social penalty for a high false negative value as compared to a false positive value.
 
 
 
