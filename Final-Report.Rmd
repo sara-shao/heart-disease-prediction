@@ -59,6 +59,10 @@ heart$HeartDisease <- factor(heart$HeartDisease)
 | Oldpeak        | The level of exercise relative to rest |Numeric value  |
 | HeartDisease   | Output class denoting if patient has Heart Disease| [1: heart disease, 0: Normal]  |
 
+
+
+### Missing Data
+
 ```{r missing_data, fig.cap="Missing Data Visualization"}
 library(mice)
 library(naniar)
@@ -75,20 +79,11 @@ heart <- heart %>%
 gg_miss_upset(heart)
 ```
 
-### Missing Data
-
   There were a total of 172 observations with missing values for `Cholesterol` and `RestingBP`. (Cholesterol value of 0 and Resting Blood Pressure (BP) value of 0 are considered missing since these are impossible to reach in real life). The visualizations of the missing values in [Figure 1] shows that there are 171 observations with missing Cholesterol value and 1 observation with missing both Cholesterol and Resting BP value. For the one observation with missing Resting BP, it also had missing Cholesterol value. This observation was disregarded for analysis under Missing Completely at Random (MCAR) assumption. For the 171 observations with missing Cholesterol values, imputations were conducted based on Missing at Random (MAR) assumption. Multiple Imputation using Chained Equation (MICE) in R was used to impute the values. Five chains of imputations were conducted for Cholesterol with each chain using the default method of predictive mean matching (ppm) method since Cholesterol was a numerical variable.
 
 ### Exploratory Data Analysis
 
   The graph below shows that in the dataset, the frequency of a positive diagnosis for heart disease is roughly equal to the frequency of a negative diagnosis of heart disease. Thus, the data is likely not based on the general population, where the frequency of heart disease is much lower. As a result, the inference and predictions from our models do not apply to the general population, but only to the population this dataset was drawn from, which is the population of patients who are at risk of heart disease and were checked for heart disease.
-  
-```{r, include =FALSE}
-#library(tidyverse)
-#library(patchwork)
-#heart <- read.csv(file = 'heart.csv')
-#heart$HeartDisease <- factor(heart$HeartDisease)
-```
 
 ```{r, include = FALSE}
 heart <- read.csv(file = 'heart.csv')
