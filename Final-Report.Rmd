@@ -199,7 +199,7 @@ rf.heart
 ```
 
 ### SVM
-Finally, our third model uses a Support Vector Machine (SVM). An SVM uses kernels to provide a flexible classification model. It separates the domain of the data with the goal maximizing the margin distance while allowing for a small number of misclassified training points. Although SVMs are not very interpretable and therefore wouldn’t fit our inference goals, they tend to yield high prediction accuracy and work well with categorical response variables, so we fit an SVM for prediction purposes to compare with our other models. The cost tuning parameters for our SVM models are determined using cross validation, and the best kernel is determined at the end based on the misclassification error from a 70-30 training-test split. The best kernel ended up being a tie between the linear and radial kernals, so we chose the linear kernel for parity. The equation for the linear kernel is:
+Finally, our third model uses a Support Vector Machine (SVM). An SVM uses kernels to provide a flexible classification model. It separates the domain of the data with the goal maximizing the margin distance while allowing for a small number of misclassified training points. Although SVMs are not very interpretable and therefore wouldn’t fit our inference goals, they tend to yield high prediction accuracy and work well with categorical response variables, so we fit an SVM for prediction purposes to compare with our other models. The cost tuning parameters for our SVM models are determined using 5-fold cross validation, and the best kernel is determined at the end based on the misclassification error over each of the 5 folds. UPDATE THIS SENTENCE WITH RESULT FROM 5 FOLD CVThe best kernel ended up being a tie between the linear and radial kernals, so we chose the linear kernel for parity. The equation for the linear kernel is:
 
 $$K(x_i,x_{i'})=(1+\sum_{j=1}^{p}x_{ij}x_{i'j})^d$$
 
@@ -229,7 +229,7 @@ for (i in 1:length(svm.pred)){
 }
 print(wrong/length(test$HeartDisease))
 ```
-Our final SVM model uses a linear kernel with a cost of 5.623. The error rate for this model is 12.05%.
+UPDATE THIS WITH 5 FOLD CV RESULT Our final SVM model uses a linear kernel with a cost of 5.623. The error rate for this model is 12.05%.
 
 
 ## IV. Results
