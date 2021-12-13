@@ -131,6 +131,7 @@ misclassfication.svm <- rep(0, 5)
 misclassifcation.rf <- rep(0, 5)
 misclassfication.glm <- rep(0, 5)
 misclassification.final <- rep(0, 5)
+misclassification.glm.aic <- rep(0,5)
 
 
 get_misclassification_with_prediction <- function(prediction, y_test) {
@@ -156,6 +157,16 @@ for(i in 1:5){
    glm.fit <- glm(HeartDisease ~ Sex + Age + ChestPainType + RestingBP + Oldpeak + FastingBS+ ST_Slope+ MaxHR + RestingECG + ExerciseAngina + Cholesterol +  Age*Sex + Age*ChestPainType + Age*RestingBP+ Age*Oldpeak+Sex*ChestPainType + Sex*FastingBS+ Sex*Oldpeak + Sex*ST_Slope+ ChestPainType*FastingBS+ ChestPainType*MaxHR + ChestPainType*RestingECG + ChestPainType*ExerciseAngina + ChestPainType*Oldpeak + ChestPainType*ST_Slope + RestingBP*Cholesterol + RestingBP*ExerciseAngina + RestingBP*Oldpeak + RestingBP*ST_Slope + Cholesterol*ExerciseAngina + FastingBS*RestingECG + FastingBS*ST_Slope + RestingECG*ST_Slope + ExerciseAngina*Oldpeak + ExerciseAngina*ST_Slope + Oldpeak*ST_Slope , family = "binomial", 
      data = trainData)
    
+   # From AIC
+   glm.fit2 <- glm(formula = HeartDisease ~ Age + Sex + ChestPainType + RestingBP + 
+    Cholesterol + FastingBS + RestingECG + MaxHR + ExerciseAngina + 
+    Oldpeak + ST_Slope + Age:ST_Slope + Sex:FastingBS + Sex:MaxHR + 
+    Sex:ExerciseAngina + ChestPainType:Cholesterol + ChestPainType:FastingBS + 
+    ChestPainType:RestingECG + ChestPainType:ST_Slope + RestingBP:Oldpeak + 
+    Cholesterol:ST_Slope + FastingBS:ST_Slope + RestingECG:ExerciseAngina + 
+    MaxHR:ST_Slope, family = "binomial", data = trainData)
+
+   
    
    
   prediction.svm <- predict(svm.linear, X.test)
@@ -164,12 +175,20 @@ for(i in 1:5){
   # prediction with glm returns prediction for the logit, thus it seems that it's necessary
   # to convert that to the labels we need manually
   prediction.glm <- predict(glm.fit, X.test, type="response")
+  prediction.glm2 <- predict(glm.fit2, X.test, type="response")
   for(j in 1:length(prediction.glm)) {
     if(prediction.glm[j] < 0.5) {
       prediction.glm[j] = 0
     }
     else {
       prediction.glm[j] = 1
+    }
+    
+    if(prediction.glm2[j] < 0.5) {
+      prediction.glm2[j] = 0
+    }
+    else {
+      prediction.glm2[j] = 1
     }
   }
   
@@ -183,7 +202,7 @@ for(i in 1:5){
     if(prediction.rf[j]== 1) {
       prediction.total[j] = prediction.total[j] +  1
     }
-    if(prediction.glm[j] == 1) {
+    if(prediction.glm2[j] == 1) {
       prediction.total[j] = prediction.total[j] +  1
     }
     if(prediction.total[j] > 1.5) {
@@ -195,6 +214,7 @@ for(i in 1:5){
    misclassifcation.rf[i] = get_misclassification_with_prediction(prediction.rf, y.test)
    misclassfication.glm[i] = get_misclassification_with_prediction(prediction.glm, y.test)
    misclassification.final[i] = get_misclassification_with_prediction(prediction.total, y.test)
+   misclassification.glm.aic[i] = get_misclassification_with_prediction(prediction.glm2, y.test)
 }
 ```
 
@@ -203,6 +223,7 @@ misclassfication.svm
 misclassifcation.rf
 misclassfication.glm
 misclassification.final
+misclassification.glm.aic
 ```
 
 ```{r}
@@ -210,5 +231,5 @@ mean(misclassfication.svm)
 mean(misclassifcation.rf)
 mean(misclassfication.glm)
 mean(misclassification.final)
-
+mean(misclassification.glm.aic)
 ```
