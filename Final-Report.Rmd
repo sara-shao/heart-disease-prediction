@@ -235,41 +235,162 @@ rf.heart
 The error rate from this model is 13.4%. At the end, the error rate of this model will be compared with the error rate of our other two models to decide if this is the model we will end up using to predict heart disease in at-risk patients.
 
 ### SVM
-Finally, our third model uses a Support Vector Machine (SVM). An SVM uses kernels to provide a flexible classification model. It separates the domain of the data with the goal maximizing the margin distance while allowing for a small number of misclassified training points. Although SVMs are not very interpretable and therefore wouldn’t fit our inference goals, they tend to yield high prediction accuracy and work well with categorical response variables, so we fit an SVM for prediction purposes to compare with our other models. The cost tuning parameters for our SVM models are determined using 5-fold cross validation, and the best kernel is determined at the end based on the misclassification error over each of the 5 folds. UPDATE THIS SENTENCE WITH RESULT FROM 5 FOLD CVThe best kernel ended up being a tie between the linear and radial kernals, so we chose the linear kernel for parity. The equation for the linear kernel is:
-
-$$K(x_i,x_{i'})=(1+\sum_{j=1}^{p}x_{ij}x_{i'j})^d$$
+Finally, our third model uses a Support Vector Machine (SVM). An SVM uses kernels to provide a flexible classification model. It separates the domain of the data with the goal maximizing the margin distance while allowing for a small number of misclassified training points. Although SVMs are not very interpretable and therefore wouldn’t fit our inference goals, they tend to yield high prediction accuracy and work well with categorical response variables, so we fit an SVM for prediction purposes to compare with our other models. The three types of kernels for SVM that we considered were linear, polynomial, and radial. For each of the kernels, we considered a range of the penalty coefficient $C$. For polynomial kernel, the degree was set to $2$. The best cost tuning parameters for each of our SVM models were determined using the 'tune' function provided by the 'e1071' package.
 
 ```{r}
+# Getting the best cost parameter for each types of kernels
 set.seed(1)
-training <- sample(dim(heart)[1], 522)
-train <- heart[training, ]
-test <- heart[-training, ]
+tune.out.linear = tune(svm, HeartDisease ~ ., data = heart, kernel = "linear", ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+tune.out.poly = tune(svm, HeartDisease ~ ., data = heart, kernel = "poly", degree=2, ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+tune.out.radial = tune(svm, HeartDisease ~ ., data = heart, kernel = "radial", ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+```
+
+Then, using the chosen hyperparameters for each models, we ran 5-fold cross validation to determine the estimated test error for each of the models. In each fold, we trained three svm models using 80% of the data, each for the three types of kernels with the chosen parameters. Then, on the other 20% of the data, we computed the misclassification error rate at each fold. Then, we compared the mean of the misclassification rates to select the best model.
+
+```{r, echo = TRUE}
+# Dividing the data into 5 folds
+set.seed(1)
+shuffled_heart <- heart[sample(nrow(heart)),]
+folds <- cut(seq(1,nrow(shuffled_heart)),breaks=5,labels=FALSE)
 ```
 
 ```{r}
-set.seed(1)
-tune.out = tune(svm, HeartDisease ~ ., data = train, kernel = "linear", ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
-```
+# Best parameters for each kernel
+tune.out.linear.cost <- tune.out.linear$best.parameters$cost
+tune.out.poly.cost <- tune.out.poly$best.parameters$cost
+tune.out.radial.cost <- tune.out.radial$best.parameters$cost
 
-```{r}
-svm.fit = svm(HeartDisease ~ ., kernel = "linear", data = train, cost = tune.out$best.parameters$cost)
-summary(svm.fit)
+# error
+misclassfication.linear <- rep(0, 5)
+misclassfication.poly <- rep(0, 5)
+misclassfication.radial <- rep(0, 5)
 
-svm.pred <- predict(svm.fit, test)
-
-wrong <- 0
-for (i in 1:length(svm.pred)){
-  if (svm.pred[i]!=test$HeartDisease[i]){
-    wrong = wrong + 1
-  }
+get_misclassification <- function(bestmod, X_test, y_test) {
+  prediction <- predict(bestmod, X_test)
+  tab <- table(y_test, prediction)
+  misclassification_rate <- 1 - sum(diag(tab))/sum(tab)
+  return(misclassification_rate)
 }
-print(wrong/length(test$HeartDisease))
+
+# Cross validation
+for(i in 1:5){
+  #Segment your data by fold using the which() function 
+    testIndexes <- which(folds==i,arr.ind=TRUE)
+    testData <- shuffled_heart[testIndexes, ]
+    y.test <- testData$HeartDisease
+    X.test <- testData[, -12]
+    trainData <- shuffled_heart[-testIndexes, ]
+    
+  # Need to choose parameters
+   set.seed(1)
+   svm.linear <- svm(HeartDisease ~ ., kernel = "linear", data = trainData, cost = tune.out.linear.cost)
+   svm.poly <- svm(HeartDisease ~ ., kernel = "poly", data = trainData, degree=2, cost = tune.out.poly.cost)
+   svm.radial <- svm(HeartDisease ~ ., kernel = "radial", data = trainData, cost = tune.out.radial.cost)
+   
+   misclassfication.linear[i] = get_misclassification(svm.linear, X.test, y.test)
+   misclassfication.poly[i] = get_misclassification(svm.poly, X.test, y.test)
+   misclassfication.radial[i] = get_misclassification(svm.radial, X.test, y.test)
+ }
+
+mean(misclassfication.linear)
+mean(misclassfication.poly)
+mean(misclassfication.radial)
 ```
-UPDATE THIS WITH 5 FOLD CV RESULT Our final SVM model uses a linear kernel with a cost of 5.623. The error rate for this model is 12.05%. We will compare the error rate of this model with the error rate of our other two models to decide if this is the model we will end up using for predicting heart disease.
+
+Linear SVM model performed best among the three types of kernels. The best hyperparameter chosen for linear SVM is $c = 1$. In our best SVM model, there are 249 support vectors.
+```{r}
+svm.linear <- svm(HeartDisease ~ ., kernel = "linear", data = heart, cost = tune.out.linear.cost)
+tune.out.linear.cost
+summary(svm.linear)
+```
+
+### Comparision of the models through CV
+On top of this, we also considered a combination of the models chosen from each algorithm: linear SVM, random forest, and logistic regression. The combination model predicts the value that appears most among the three models' prediction. This model was also considered to examine how effective the emsembled model of the algorithms would perform. To compare these models, cross-validation was five folds was used. At each fold, each of the models were trained with the hyperparameters that were selected from the above. The misclassification rate on each fold was calculated for each model, and the mean of the misclassification rates were computed in the end. Below is the code for the cross validation, and the results will be analyzed in the following section.
+
+```{r}
+# error
+misclassfication.svm <- rep(0, 5)
+misclassifcation.rf <- rep(0, 5)
+misclassification.glm.aic <- rep(0,5)
+misclassification.combined <- rep(0,5)
 
 
-###CROSS VALIDATION
-ADD COMMENTARY HERE ON HOW WE PICKED BEST MODEL
+get_misclassification_with_prediction <- function(prediction, y_test) {
+  tab <- table(y_test, prediction)
+  misclassification_rate <- 1 - sum(diag(tab))/sum(tab)
+  return(misclassification_rate)
+}
+
+# Cross validation
+for(i in 1:5){
+  
+  
+   #Segment your data by fold using the which() function 
+   testIndexes <- which(folds==i,arr.ind=TRUE)
+   testData <- shuffled_heart[testIndexes, ]
+   y.test <- testData$HeartDisease
+   X.test <- testData[, -12]
+   trainData <- shuffled_heart[-testIndexes, ]
+    
+   set.seed(1)
+   #
+   svm.linear <- svm(HeartDisease ~ ., kernel = "linear", data = trainData, cost = tune.out.linear.cost)
+   # Random Forest model
+   rf.fit <- randomForest(HeartDisease ~ ., data = trainData, mtry = sqrt(11), ntree = 650)
+   # From AIC
+   glm.fit <- glm(formula = HeartDisease ~ Age + Sex + ChestPainType + RestingBP + 
+    Cholesterol + FastingBS + RestingECG + MaxHR + ExerciseAngina + 
+    Oldpeak + ST_Slope + Age:ST_Slope + Sex:FastingBS + Sex:MaxHR + 
+    Sex:ExerciseAngina + ChestPainType:Cholesterol + ChestPainType:FastingBS + 
+    ChestPainType:RestingECG + ChestPainType:ST_Slope + RestingBP:Oldpeak + 
+    Cholesterol:ST_Slope + FastingBS:ST_Slope + RestingECG:ExerciseAngina + 
+    MaxHR:ST_Slope, family = "binomial", data = trainData)
+
+  prediction.svm <- predict(svm.linear, X.test)
+  prediction.rf <- predict(rf.fit, X.test)
+  
+  # prediction with glm returns prediction for the logit, thus it seems that it's necessary
+  # to convert that to the labels we need manually
+  prediction.glm <- predict(glm.fit, X.test, type="response")
+  for(j in 1:length(prediction.glm)) {
+    if(prediction.glm[j] < 0.5) {
+      prediction.glm[j] = 0
+    }
+    else {
+      prediction.glm[j] = 1
+    }
+  }
+  
+  prediction.total <- rep(0, length(prediction.glm))
+  #Compute the final model
+  for(j in 1:length(prediction.total)) {
+    if(prediction.svm[j] == 1) {
+      prediction.total[j] = 1
+    }
+    if(prediction.rf[j]== 1) {
+      prediction.total[j] = prediction.total[j] +  1
+    }
+    if(prediction.glm[j] == 1) {
+      prediction.total[j] = prediction.total[j] +  1
+    }
+    if(prediction.total[j] > 1.5) {
+      prediction.total[j] = 1
+    }
+  }
+   
+   misclassfication.svm[i] = get_misclassification_with_prediction(prediction.svm, y.test)
+   misclassifcation.rf[i] = get_misclassification_with_prediction(prediction.rf, y.test)
+   misclassification.combined[i] = get_misclassification_with_prediction(prediction.total, y.test)
+   misclassification.glm.aic[i] = get_misclassification_with_prediction(prediction.glm, y.test)
+}
+```
+
+```{r}
+mean(misclassfication.svm)
+mean(misclassifcation.rf)
+mean(misclassification.combined)
+mean(misclassification.glm.aic)
+```
 
 ## IV. Results
 ADD COMMENTARY HERE ABOUT WHICH MODEL WAS THE BEST AND THE CORRESPONDING ERROR RATES
