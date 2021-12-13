@@ -198,7 +198,7 @@ heart <- heart.imp.1
 heart$HeartDisease <- factor(heart$HeartDisease)
 ```
 
-Note: Results obtained from each modeling approach below are using the first of 5 imputed chains.
+Note: Results from the logistic regression and random forest are examples from fitting each model to the first of 5 chains of imputed results.
 
 ### Logistic Regression
 Our first model is a logistic regression model. The logistic regression model is formulated by the equation:
@@ -306,7 +306,7 @@ summary(svm.linear)
 ```
 
 ### Comparision of the models through CV
-On top of this, we also considered a combination of the models chosen from each algorithm: linear SVM, random forest, and logistic regression. The combination model predicts the value that appears most among the three models' prediction. This model was also considered to examine how effective the emsembled model of the algorithms would perform. To compare these models, cross-validation was five folds was used. At each fold, each of the models were trained with the hyperparameters that were selected from the above. The misclassification rate on each fold was calculated for each model, and the mean of the misclassification rates were computed in the end. Below is the code for the cross validation, and the results will be analyzed in the following section.
+On top of this, we also considered a combination of the models chosen from each algorithm: linear SVM, random forest, and logistic regression. The combination model predicts the value that appears most among the three models' predictions. This model was also considered in order to examine how effective the emsembled model of the algorithms would perform. To compare these models, cross-validation with five folds was used. At each fold, each of the models were trained with the hyperparameters that were selected from the above. The misclassification rate on each fold was calculated for each model, and the mean of the misclassification rates were computed in the end. Below is the code for the cross validation, and the results will be analyzed in the following section.
 
 ```{r}
 # error
