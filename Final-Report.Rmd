@@ -26,26 +26,7 @@ library(patchwork)
 library(mice)
 heart <- read.csv(file = 'heart.csv')
 
-heart <- heart %>% 
-  mutate(Cholesterol = case_when(
-    Cholesterol == 0 ~ NA_integer_,
-    TRUE ~ Cholesterol
-  ),
-  RestingBP = case_when(
-    RestingBP == 0 ~ NA_integer_,
-    TRUE ~ RestingBP
-  ))
-heart.full <- heart %>% 
-  filter(!(is.na(Cholesterol)&is.na(RestingBP)))
 
-#impute 5 chains of full data-set
-heart.mice.ls <- mice(heart.full, seed = 1)
-# separate the five chains
-heart.imp.1 <- complete(heart.mice.ls, 1)
-
-heart <- heart.imp.1
-
-heart$HeartDisease <- factor(heart$HeartDisease)
 
 ```
 
@@ -86,7 +67,6 @@ heart$HeartDisease <- factor(heart$HeartDisease)
 ### Missing Data
 
 ```{r missing_data, fig.cap="Missing Data Visualization"}
-library(mice)
 library(naniar)
 heart <- heart %>% 
  mutate(Cholesterol = case_when(
@@ -194,6 +174,29 @@ eda10 <- ggplot(data = heart, mapping = aes(x = HeartDisease, y = Oldpeak)) +
 From the exploratory data analysis, it appears that the incidence of heart disease tends to occur with higher age, a lower maximum heart rate, slightly higher cholesterol, and a higher level of exercise relative to rest. These variables may be worth exploring in our models later.
 
 ## III. Methodology 
+```{r}
+heart <- heart %>% 
+  mutate(Cholesterol = case_when(
+    Cholesterol == 0 ~ NA_integer_,
+    TRUE ~ Cholesterol
+  ),
+  RestingBP = case_when(
+    RestingBP == 0 ~ NA_integer_,
+    TRUE ~ RestingBP
+  ))
+heart.full <- heart %>% 
+  filter(!(is.na(Cholesterol)&is.na(RestingBP)))
+
+#impute 5 chains of full data-set
+heart.mice.ls <- mice(heart.full, seed = 1)
+# separate the five chains
+heart.imp.1 <- complete(heart.mice.ls, 1)
+
+heart <- heart.imp.1
+
+heart$HeartDisease <- factor(heart$HeartDisease)
+```
+
 
 ### Logistic Regression
 Our first model is a logistic regression model. The logistic regression model is formulated by the equation:
