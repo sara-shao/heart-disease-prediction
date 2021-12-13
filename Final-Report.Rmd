@@ -211,7 +211,6 @@ fullmod <- glm(HeartDisease ~.^2,family="binomial",data = heart)
 selectedmod <- step(fullmod,direction="backward", trace = FALSE)
 summary(selectedmod)
 ```
-We will be concentrating on interpreting some of the significant terms. One of the categorical terms that is significant is SexM, with an associated coefficient of 6.850. This means that being male, compared to the baseline of female, leads to an expected 6.850 increase in the log odds of having heart disease. We can also say that being male, compared to the baseline of female, leads to the odds of having heart disease to multiply by a factor of e^(6.850). We can also see that having a RestingECG level of ST leads to a decrease in the odds of getting heart disease when compared to the baseline of LVH. All other main effects are not considered significant at alpha = 0.05. 
 
 ### Random Forest
 Our second model uses a random forest. With random forests, we fit a large number of binary decision trees, each on a bagged set of data and each with a random subset of predictors, then average the trees to get a final prediction. By using random subsets of predictors, we decorrelate the trees and reduce the variance compared to other methods like bagging. The random forest method yields itself well to the project goals at hand because of the categorical and binary nature of the outcomes we’re trying to predict. We built a random forest of 650 trees built off of bootstrapped heart data. We specified number of predictors sampled for spitting at each node as sqrt(11) ~ 3. We chose sqrt(11) (square root of the number of predictors) since this is the industry-standard for classification. We chose 650 trees in order to lower our false negative rate, as we can see in our error plot. 
@@ -268,9 +267,21 @@ print(wrong/length(test$HeartDisease))
 ```
 UPDATE THIS WITH 5 FOLD CV RESULT Our final SVM model uses a linear kernel with a cost of 5.623. The error rate for this model is 12.05%. We will compare the error rate of this model with the error rate of our other two models to decide if this is the model we will end up using for predicting heart disease.
 
-## IV. Results
 
+###CROSS VALIDATION
+ADD COMMENTARY HERE ON HOW WE PICKED BEST MODEL
+
+## IV. Results
+ADD COMMENTARY HERE ABOUT WHICH MODEL WAS THE BEST AND THE CORRESPONDING ERROR RATES
+
+Note: The following analysis of the logistic regression and random forest results are based on fitting each model to the first of 5 chains of imputed results. 
 ### Logistic Regression:
+
+We would like to use the results of the logistic regression in order to interpret the relationships between different variables and the response variable, despite it not being the best model for prediction. 
+
+We will be concentrating on interpreting some of the significant terms. One of the categorical terms that is significant is Sex, with an associated coefficient of 6.850. This means that being male, compared to the baseline of female, leads to an expected 6.850 increase in the log odds of having heart disease. We can also say that being male, compared to the baseline of female, leads to the odds of having heart disease to multiply by a factor of e^(6.850). We can also see that having a RestingECG level of ST leads to a decrease in the odds of getting heart disease when compared to the baseline of LVH. All other main effects are not considered significant at alpha = 0.05. 
+
+There are a handful of significant interaction effects, most of which are interactions between 2 categorical variables. One example of this is between Sex and FastingBS. When FastingBS takes the baseline value of 0, a male compared to the baseline of female will result in an expected 6.850 increase in the log odds of having heart disease. When FastingBS takes the value 1, a male compared to the baseline of female will now result in an expected 6.850 - 4.101 = 2.749 increase in the log odds of having heart disease. One example of an interaction between a categorical and continuous variable is ChestPainType and Cholesterol. We should keep in mind that this interpretation may not be appropriate because the main effect for Cholesterol is not considered significant. For a baseline ChestPainType of ASY, an increase of 1 unit in Cholesterol will result in an expected decrease of 1.288 in the log odds of having heart disease. For a ChestPainType of ATA, a 1 unit increase in Cholesterol now results in an expected decrease of 1.288 - 0.023 = 1.265 in the log odds of having heart disease. 
 
 ### Random Forest:
 Our confusion matrix tells us that there is a 0.141 false positive rate and a 0.126 false negative rate. This means that 14.1% of the time, our model predicts someone who doesn’t have heart disease to have heart disease. At the same time, 12.6% of the time, our model predicts someone who has heart disease to not have heart disease. It is better in this scenario that our false positive rate is higher than the false negative rate because it is better that we over predict people having heart disease than to under predict. If we over predict, people who didn't have heart disease but thought they did would get a second opinion and eventually realize that they don't actually have the disease. If we under predicted, then people who have actually heart disease wouldn't get the necessary treatment and may have worsened affects. Despite the false negative rate being quite high, we decided to keep the default cutoff value of 0.5 because without having done a lot more in-depth research on this medical topic, it would be fairly arbitrary of us to choose another cut off point. Intuitively, it would make sense for us to choose a higher cutoff value because there is a heavier social penalty for a high false negative value as compared to a false positive value. One limitation of our random forest is that we can't tell from this model which factors are important in predicting heart disease. Another limitation is that we can't predict heart disease as accurately with this model compared to the SVM model. 
