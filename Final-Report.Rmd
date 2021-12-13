@@ -21,8 +21,30 @@ heart$HeartDisease <- factor(heart$HeartDisease)
 ```{r, include = FALSE}
 library(tidyverse)
 library(patchwork)
+library(mice)
 heart <- read.csv(file = 'heart.csv')
+
+heart <- heart %>% 
+  mutate(Cholesterol = case_when(
+    Cholesterol == 0 ~ NA_integer_,
+    TRUE ~ Cholesterol
+  ),
+  RestingBP = case_when(
+    RestingBP == 0 ~ NA_integer_,
+    TRUE ~ RestingBP
+  ))
+heart.full <- heart %>% 
+  filter(!(is.na(Cholesterol)&is.na(RestingBP)))
+
+#impute 5 chains of full data-set
+heart.mice.ls <- mice(heart.full, seed = 1)
+# separate the five chains
+heart.imp.1 <- complete(heart.mice.ls, 1)
+
+heart <- heart.imp.1
+
 heart$HeartDisease <- factor(heart$HeartDisease)
+
 ```
 
 ## I. Introduction
