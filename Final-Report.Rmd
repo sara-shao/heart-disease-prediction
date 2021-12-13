@@ -198,6 +198,7 @@ heart <- heart.imp.1
 heart$HeartDisease <- factor(heart$HeartDisease)
 ```
 
+Note: Results obtained from each modeling approach below are using the first of 5 imputed chains.
 
 ### Logistic Regression
 Our first model is a logistic regression model. The logistic regression model is formulated by the equation:
