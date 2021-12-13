@@ -233,6 +233,8 @@ rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), ntree 
 rf.heart
 ```
 
+The error rate from this model is 13.4%. At the end, the error rate of this model will be compared with the error rate of our other two models to decide if this is the model we will end up using to predict heart disease in at-risk patients.
+
 ### SVM
 Finally, our third model uses a Support Vector Machine (SVM). An SVM uses kernels to provide a flexible classification model. It separates the domain of the data with the goal maximizing the margin distance while allowing for a small number of misclassified training points. Although SVMs are not very interpretable and therefore wouldn’t fit our inference goals, they tend to yield high prediction accuracy and work well with categorical response variables, so we fit an SVM for prediction purposes to compare with our other models. The cost tuning parameters for our SVM models are determined using 5-fold cross validation, and the best kernel is determined at the end based on the misclassification error over each of the 5 folds. UPDATE THIS SENTENCE WITH RESULT FROM 5 FOLD CVThe best kernel ended up being a tie between the linear and radial kernals, so we chose the linear kernel for parity. The equation for the linear kernel is:
 
@@ -264,19 +266,17 @@ for (i in 1:length(svm.pred)){
 }
 print(wrong/length(test$HeartDisease))
 ```
-UPDATE THIS WITH 5 FOLD CV RESULT Our final SVM model uses a linear kernel with a cost of 5.623. The error rate for this model is 12.05%.
-
+UPDATE THIS WITH 5 FOLD CV RESULT Our final SVM model uses a linear kernel with a cost of 5.623. The error rate for this model is 12.05%. We will compare the error rate of this model with the error rate of our other two models to decide if this is the model we will end up using for predicting heart disease.
 
 ## IV. Results
 
-### Lasso:
+### Logistic Regression:
 
 ### Random Forest:
-Our confusion matrix tells us that there is a 0.168 false positive rate and a 0.094 false negative rate. This means that 16.8% of the time, our model predicts someone who doesn’t have heart disease to have heart disease. At the same time, 9.4% of the time, our model predicts someone who has heart disease to not have heart disease. It is better in this scenario that our false positive rate is higher than the false negative rate because it is better that we over predict people having heart disease than to under predict. If we over predict, people who didn't have heart disease but thought they did would get a second opinion and eventually realize that they don't actually have the disease. If we under predicted, then people who have actually heart disease wouldn't get the necessary treatment and may have worsened affects. Despite the false negative rate being quite high, we decided to keep the default cutoff value of 0.5 because without having done a lot more in-depth research on this medical topic, it would be fairly arbitrary of us to choose another cut off point. Intuitively, it would make sense for us to choose a higher cutoff value because there is a heavier social penalty for a high false negative value as compared to a false positive value.
-
-
+Our confusion matrix tells us that there is a 0.141 false positive rate and a 0.126 false negative rate. This means that 14.1% of the time, our model predicts someone who doesn’t have heart disease to have heart disease. At the same time, 12.6% of the time, our model predicts someone who has heart disease to not have heart disease. It is better in this scenario that our false positive rate is higher than the false negative rate because it is better that we over predict people having heart disease than to under predict. If we over predict, people who didn't have heart disease but thought they did would get a second opinion and eventually realize that they don't actually have the disease. If we under predicted, then people who have actually heart disease wouldn't get the necessary treatment and may have worsened affects. Despite the false negative rate being quite high, we decided to keep the default cutoff value of 0.5 because without having done a lot more in-depth research on this medical topic, it would be fairly arbitrary of us to choose another cut off point. Intuitively, it would make sense for us to choose a higher cutoff value because there is a heavier social penalty for a high false negative value as compared to a false positive value. One limitation of our random forest is that we can't tell from this model which factors are important in predicting heart disease. Another limitation is that we can't predict heart disease as accurately with this model compared to the SVM model. 
 
 ### SVM:
+Compared to the logistic regression and random forest model, the SVM performs better for prediction, as we expected. Therefore, if we wanted a model that would assess whether a patient at risk for heart disease most likely has or does not have heart disease based on their personal and health factors, this is the model we would choose. However, this model does not tell us much about what factors are or aren't important in predicting heart disease, and it cannot tell us actually likelihoods of having heart disease or not. 
 
 ## V. Conclusion
 
