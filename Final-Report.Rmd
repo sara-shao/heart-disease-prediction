@@ -243,7 +243,7 @@ shuffled_heart <- heart[sample(nrow(heart)),]
 folds <- cut(seq(1,nrow(shuffled_heart)),breaks=5,labels=FALSE)
 ```
 
-```{r}
+```{r, message=TRUE}
 # Best parameters for each kernel
 tune.out.linear.cost <- tune.out.linear$best.parameters$cost
 tune.out.poly.cost <- tune.out.poly$best.parameters$cost
@@ -300,9 +300,13 @@ summary(svm.linear)
 We will then examine the predictive performance of this model in relation to the other two models.
 
 ### Comparision of the models through CV
-On top of this, we also considered a combination of the models chosen from each algorithm: linear SVM, random forest, and logistic regression. The combination model predicts the value that appears most among the three models' predictions. This model was also considered in order to examine how effective the emsembled model of the algorithms would perform. To compare these models, cross-validation with five folds was used. At each fold, each of the models were trained with the hyperparameters that were selected from the above. The misclassification rate on each fold was calculated for each model, and the mean of the misclassification rates were computed in the end. Below is the code for the cross validation, and the results will be analyzed in the following section.
+On top of this, we also considered a combination of the models chosen from each algorithm: linear SVM, random forest, and logistic regression. The combination model predicts the value that appears most among the three models' predictions. To compare the predictive accuracy of all four models (the three individual models and the combined model), cross-validation with five folds was used. At each fold, each of the models were trained with the hyperparameters that were selected from the above. The misclassification rate on each fold was calculated for each model, and the mean of the misclassification rates were computed in the end.
 
-```{r}
+## IV. Results 
+
+### Mean misclassification rates for each model
+
+```{r, message=TRUE}
 # error
 misclassfication.svm <- rep(0, 5)
 misclassifcation.rf <- rep(0, 5)
@@ -381,14 +385,22 @@ for(i in 1:5){
 ```
 
 ```{r}
-mean(misclassfication.svm)
+message("Random forest")
 mean(misclassifcation.rf)
+message("SVM")
+mean(misclassfication.svm)
+message("Combined model")
 mean(misclassification.combined)
+message("Logistic regression")
 mean(misclassification.glm.aic)
 ```
-ADD COMMENTARY HERE ABOUT WHICH MODEL WAS THE BEST AND THE CORRESPONDING ERROR RATES
+The random forest model had the best predictive performance with a mean misclassification rate of 13.5%, outperforming even the combined model. Therefore, if we wanted a model that would assess whether an at-risk patient most likely has or does not have heart disease based on their personal and health factors, this is the model we would choose.
+
+
+
 
 Note: The following analysis of the logistic regression and random forest results are based on fitting each model to the first of 5 chains of imputed results. 
+
 ### Logistic Regression:
 
 ```{r}
@@ -415,12 +427,12 @@ rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), ntree 
 rf.heart
 ```
 
-The out-of-bag error from this model is 13.4%, meaning we expect this model to classify patients incorrectly around 13.4% of the time.  At the end, the error rate of this model will be compared with the error rate of our other two models to decide if this is the model we will end up using to predict heart disease in at-risk patients.
+The out-of-bag error from this model is 13.4%, meaning we expect this model to classify patients incorrectly around 13.4% of the time.
 
 Our confusion matrix tells us that there is a 0.141 false positive rate and a 0.126 false negative rate. This means that 14.1% of the time, our model predicts someone who doesn’t have heart disease to have heart disease. At the same time, 12.6% of the time, our model predicts someone who has heart disease to not have heart disease. It is better in this scenario that our false positive rate is higher than the false negative rate because it is better that we over predict people having heart disease than to under predict. If we over predict, people who didn't have heart disease but thought they did would get a second opinion and eventually realize that they don't actually have the disease. If we under predicted, then people who have actually heart disease wouldn't get the necessary treatment and may have worsened affects. Despite the false negative rate being quite high, we decided to keep the default cutoff value of 0.5 because without having done a lot more in-depth research on this medical topic, it would be fairly arbitrary of us to choose another cut off point. Intuitively, it would make sense for us to choose a higher cutoff value because there is a heavier social penalty for a high false negative value as compared to a false positive value. One limitation of our random forest is that we can't tell from this model which factors are important in predicting heart disease. Another limitation is that we can't predict heart disease as accurately with this model compared to the SVM model. 
 
 ### SVM:
-Compared to the logistic regression and random forest model, the SVM performs better for prediction (13.7% misclassification rate), as we expected. Therefore, if we wanted a model that would assess whether a patient at risk for heart disease most likely has or does not have heart disease based on their personal and health factors, this is the model we would choose. However, this model does not tell us much about what factors are or aren't important in predicting heart disease, and it cannot tell us actually likelihoods of having heart disease or not. 
+Compared to the logistic regression model, the SVM performs better for prediction (13.7% misclassification rate), as we expected. However, this model does not tell us much about what factors are or aren't important in predicting heart disease, and it cannot tell us actually likelihoods of having heart disease or not. 
 
 ## V. Conclusion
 
