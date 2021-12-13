@@ -175,7 +175,7 @@ eda10 <- ggplot(data = heart, mapping = aes(x = HeartDisease, y = Oldpeak)) +
 From the exploratory data analysis, it appears that the incidence of heart disease tends to occur with higher age, a lower maximum heart rate, slightly higher cholesterol, and a higher level of exercise relative to rest. These variables may be worth exploring in our models later.
 
 ## III. Methodology 
-```{r}
+```{r, include=FALSE}
 heart <- heart %>% 
   mutate(Cholesterol = case_when(
     Cholesterol == 0 ~ NA_integer_,
@@ -206,12 +206,6 @@ $$\log(\frac{P}{1-P}) = \beta_0+\beta_1X_1+\beta_2X_2+...+\beta_kX_k$$
 Using logistic regression lends itself well to inference and classification goals. Our original plan was to use a lasso logistic regression to perform variable selection for all main effects plus all pairwise interactions due to the ability of lasso to shrink coefficients to 0. Then, we would add the selected variables plus any associated main effects we might need to satisfy the hierarchy principle into a normal logistic regression. However, after observing the output of the normal logistic regression, we realized that many of the p values were very large, with very few p values below an alpha significance threshold of 0.05. Since our goal with the logistic model is to be able to interpret and find relationships between predictor variables and the probability of having heart disease, we decided against using this because having very few significant terms hinders our goals. 
 
 Therefore, we decided to use a logistic regression with backwards stepwise selection using AIC. Our starting full model included all main effects and all pairwise interactions. After backwards selection, we made sure that all active interaction effects had their associated main effects included in the selected model, so that the model adheres to the hierarchy principle which aids in the interpretation of interaction effects.  
-```{r}
-fullmod <- glm(HeartDisease ~.^2,family="binomial",data = heart)
-
-selectedmod <- step(fullmod,direction="backward", trace = FALSE)
-summary(selectedmod)
-```
 
 ### Random Forest
 Our second model uses a random forest. With random forests, we fit a large number of binary decision trees, each on a bagged set of data and each with a random subset of predictors, then average the trees to get a final prediction. By using random subsets of predictors, we decorrelate the trees and reduce the variance compared to other methods like bagging. The random forest method yields itself well to the project goals at hand because of the categorical and binary nature of the outcomes we’re trying to predict. We built a random forest of 650 trees built off of bootstrapped heart data. We specified number of predictors sampled for spitting at each node as sqrt(11) ~ 3. We chose sqrt(11) (square root of the number of predictors) since this is the industry-standard for classification. We chose 650 trees in order to lower our false negative rate, as we can see in our error plot. 
@@ -227,13 +221,7 @@ rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), ntree 
 
 plot(rf.heart, xlim = c(100,1000), ylim = c(0.12,0.16))
 legend("top", colnames(rf.heart$err.rate),col=1:6,cex=0.8,fill=1:6)
-
-set.seed(1)
-rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), ntree = 650)
-rf.heart
 ```
-
-The error rate from this model is 13.4%. At the end, the error rate of this model will be compared with the error rate of our other two models to decide if this is the model we will end up using to predict heart disease in at-risk patients.
 
 ### SVM
 Finally, our third model uses a Support Vector Machine (SVM). An SVM uses kernels to provide a flexible classification model. It separates the domain of the data with the goal maximizing the margin distance while allowing for a small number of misclassified training points. Although SVMs are not very interpretable and therefore wouldn’t fit our inference goals, they tend to yield high prediction accuracy and work well with categorical response variables, so we fit an SVM for prediction purposes to compare with our other models. The three types of kernels for SVM that we considered were linear, polynomial, and radial. For each of the kernels, we considered a range of the penalty coefficient $C$. For polynomial kernel, the degree was set to $2$. The best cost tuning parameters for each of our SVM models were determined using the 'tune' function provided by the 'e1071' package.
@@ -248,14 +236,14 @@ tune.out.radial = tune(svm, HeartDisease ~ ., data = heart, kernel = "radial", r
 
 Then, using the chosen hyperparameters for each models, we ran 5-fold cross validation to determine the estimated test error for each of the models. In each fold, we trained three svm models using 80% of the data, each for the three types of kernels with the chosen parameters. Then, on the other 20% of the data, we computed the misclassification error rate at each fold. Then, we compared the mean of the misclassification rates to select the best model.
 
-```{r, echo = TRUE}
+```{r}
 # Dividing the data into 5 folds
 set.seed(1)
 shuffled_heart <- heart[sample(nrow(heart)),]
 folds <- cut(seq(1,nrow(shuffled_heart)),breaks=5,labels=FALSE)
 ```
 
-```{r}
+```{r, message=TRUE}
 # Best parameters for each kernel
 tune.out.linear.cost <- tune.out.linear$best.parameters$cost
 tune.out.poly.cost <- tune.out.poly$best.parameters$cost
@@ -293,22 +281,32 @@ for(i in 1:5){
    misclassfication.radial[i] = get_misclassification(svm.radial, X.test, y.test)
  }
 
+message("Linear kernel")
 mean(misclassfication.linear)
+message("Polynomial kernal")
 mean(misclassfication.poly)
+message("Radial kernel")
 mean(misclassfication.radial)
 ```
 
-Linear SVM model performed best among the three types of kernels. The best hyperparameter chosen for linear SVM is $c = 1$. In our best SVM model, there are 249 support vectors.
+The linear SVM model performed best among the three types of kernels. The best hyperparameter chosen for linear SVM is $c = 1$. In our best SVM model, there are 249 support vectors.
+
 ```{r}
 svm.linear <- svm(HeartDisease ~ ., kernel = "linear", data = heart, cost = tune.out.linear.cost)
 tune.out.linear.cost
 summary(svm.linear)
 ```
 
-### Comparision of the models through CV
-On top of this, we also considered a combination of the models chosen from each algorithm: linear SVM, random forest, and logistic regression. The combination model predicts the value that appears most among the three models' predictions. This model was also considered in order to examine how effective the emsembled model of the algorithms would perform. To compare these models, cross-validation with five folds was used. At each fold, each of the models were trained with the hyperparameters that were selected from the above. The misclassification rate on each fold was calculated for each model, and the mean of the misclassification rates were computed in the end. Below is the code for the cross validation, and the results will be analyzed in the following section.
+We will then examine the predictive performance of this model in relation to the other two models.
 
-```{r}
+### Comparision of the models through CV
+On top of this, we also considered a combination of the models chosen from each algorithm: linear SVM, random forest, and logistic regression. The combination model predicts the value that appears most among the three models' predictions. To compare the predictive accuracy of all four models (the three individual models and the combined model), cross-validation with five folds was used. At each fold, each of the models were trained with the hyperparameters that were selected from the above. The misclassification rate on each fold was calculated for each model, and the mean of the misclassification rates were computed in the end.
+
+## IV. Results 
+
+### Mean misclassification rates for each model
+
+```{r, message=TRUE}
 # error
 misclassfication.svm <- rep(0, 5)
 misclassifcation.rf <- rep(0, 5)
@@ -387,17 +385,30 @@ for(i in 1:5){
 ```
 
 ```{r}
-mean(misclassfication.svm)
+message("Random forest")
 mean(misclassifcation.rf)
+message("SVM")
+mean(misclassfication.svm)
+message("Combined model")
 mean(misclassification.combined)
+message("Logistic regression")
 mean(misclassification.glm.aic)
 ```
+The random forest model had the best predictive performance with a mean misclassification rate of 13.5%, outperforming even the combined model. Therefore, if we wanted a model that would assess whether an at-risk patient most likely has or does not have heart disease based on their personal and health factors, this is the model we would choose.
 
-## IV. Results
-ADD COMMENTARY HERE ABOUT WHICH MODEL WAS THE BEST AND THE CORRESPONDING ERROR RATES
+
+
 
 Note: The following analysis of the logistic regression and random forest results are based on fitting each model to the first of 5 chains of imputed results. 
+
 ### Logistic Regression:
+
+```{r}
+fullmod <- glm(HeartDisease ~.^2,family="binomial",data = heart)
+
+selectedmod <- step(fullmod,direction="backward", trace = FALSE)
+summary(selectedmod)
+```
 
 We would like to use the results of the logistic regression in order to interpret the relationships between different variables and the response variable, despite it not being the best model for prediction. 
 
@@ -406,11 +417,28 @@ We will be concentrating on interpreting some of the significant terms. One of t
 There are a handful of significant interaction effects, most of which are interactions between 2 categorical variables. One example of this is between Sex and FastingBS. When FastingBS takes the baseline value of 0, a male compared to the baseline of female will result in an expected 6.850 increase in the log odds of having heart disease. When FastingBS takes the value 1, a male compared to the baseline of female will now result in an expected 6.850 - 4.101 = 2.749 increase in the log odds of having heart disease. One example of an interaction between a categorical and continuous variable is ChestPainType and Cholesterol. We should keep in mind that this interpretation may not be appropriate because the main effect for Cholesterol is not considered significant. For a baseline ChestPainType of ASY, an increase of 1 unit in Cholesterol will result in an expected decrease of 1.288 in the log odds of having heart disease. For a ChestPainType of ATA, a 1 unit increase in Cholesterol now results in an expected decrease of 1.288 - 0.023 = 1.265 in the log odds of having heart disease. 
 
 ### Random Forest:
+
+```{r}
+x <- model.matrix(HeartDisease~., heart)[,-1]
+y <- heart$HeartDisease
+
+set.seed(1)
+rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), ntree = 650)
+rf.heart
+```
+
+The out-of-bag error from this model is 13.4%, meaning we expect this model to classify patients incorrectly around 13.4% of the time.
+
 Our confusion matrix tells us that there is a 0.141 false positive rate and a 0.126 false negative rate. This means that 14.1% of the time, our model predicts someone who doesn’t have heart disease to have heart disease. At the same time, 12.6% of the time, our model predicts someone who has heart disease to not have heart disease. It is better in this scenario that our false positive rate is higher than the false negative rate because it is better that we over predict people having heart disease than to under predict. If we over predict, people who didn't have heart disease but thought they did would get a second opinion and eventually realize that they don't actually have the disease. If we under predicted, then people who have actually heart disease wouldn't get the necessary treatment and may have worsened affects. Despite the false negative rate being quite high, we decided to keep the default cutoff value of 0.5 because without having done a lot more in-depth research on this medical topic, it would be fairly arbitrary of us to choose another cut off point. Intuitively, it would make sense for us to choose a higher cutoff value because there is a heavier social penalty for a high false negative value as compared to a false positive value. One limitation of our random forest is that we can't tell from this model which factors are important in predicting heart disease. Another limitation is that we can't predict heart disease as accurately with this model compared to the SVM model. 
 
 ### SVM:
-Compared to the logistic regression and random forest model, the SVM performs better for prediction, as we expected. Therefore, if we wanted a model that would assess whether a patient at risk for heart disease most likely has or does not have heart disease based on their personal and health factors, this is the model we would choose. However, this model does not tell us much about what factors are or aren't important in predicting heart disease, and it cannot tell us actually likelihoods of having heart disease or not. 
+Compared to the logistic regression model, the SVM performs better for prediction (13.7% misclassification rate), as we expected. However, this model does not tell us much about what factors are or aren't important in predicting heart disease, and it cannot tell us actually likelihoods of having heart disease or not. 
 
 ## V. Conclusion
+
+  Although still far from perfect, our models performed quite well when it came to predicting patients with CVD and we uncovered a lot of information as a result. [Insert some mention of the results for Logistic, Random Forests, and SVMs here]. Expanding this to the real world opens up a myriad of medical and personal uses for our models and predictive techniques. Starting simple, if someone were to be wary of their overall health for some combination of reasons (past medical history, family medical history, some form of high blood pressure/high blood sugar/cholesterol) and have not been or are not able to be diagnosed by a professional, they could be able to input their known medical information and receive a relative prediction for their risk of obtaining a CVD. Although this does not conduce a formal diagnosis, it is a quick and simple way to obtain a relative idea of health for those who may struggle economically with visiting the doctor. Our models could also be used in a more clinical setting with some success. If a professional noted that the prediction or probability for CVD in a patient was high, it would encourage them to conduct further tests and possibly seek some form of diagnosis. Although our models themselves aren't perfect, using them in conjunction with other medical testing could certainly yield positive results.
+
+  As previously mentioned, one of the biggest limitations of our findings is the dataset itself. Although the dataset is one of the largest available datasets on heart disease, the dataset's collection methodology limits the usefulness of our models. As mentioned in Section II of this report, the data is only collected from at-risk patients who received CVD diagnostic check-ups at hospitals. Thus, the data may be weighted disproportionately towards people who would receive a positive diagnosis for CVDs as the sample population in the data were not just at-risk, but were also either self-selected for or chosen to be checked for CVDs. Furthermore, the data was collected from only five hospitals in the United States and Europe. As a result, the data is far from representative of the entire global population that is at-risk for CVDs and our models and results may not be accurate for predicting the likelihood of CVDs for all at-risk populations in the world. This implies that if someone who were not from the target locations in the dataset were to use our model for their own health purposes, the prediction may not be entirely accurate.
+
 
   As mentioned earlier, one of the biggest limitations of our findings is the dataset itself. Although the dataset is one of the largest available datasets on heart disease, the dataset's collection methodology limits the usefulness of our models. As mentioned in the Section II of this report, the data is only collected from at-risk patients who received CVD diagnostic check-ups at hospitals. Thus, the data may be weighted disproportionately towards people who would received a positive diagnosis for CVDs, as the sample population in the data were not just at-risk, but also either self-selected for or were chosen to be checked for CVDs. Furthermore, the data was collected from only five hospitals in the United States and Europe. As a result, the data is far from representative of the entire global population that is at-risk for CVDs, and our models and results may not be accurate for predicting the likelihood of CVDs for all at-risk populations in the world, and may provide limited understanding of signs that at-risk populations who are not represented by the data can analyze to check their risk for CVDs.
