@@ -32,6 +32,11 @@ heart %>%
   count(ST_Slope)
 heart %>% 
   count(HeartDisease)
+heart %>% 
+  count(RestingECG)
+heart %>% 
+  count(FastingBS)
+heart
 heart <- heart %>% 
   mutate(Sex = as.factor(Sex)) %>% 
   mutate(ChestPainType= as.factor(ChestPainType)) %>% 
