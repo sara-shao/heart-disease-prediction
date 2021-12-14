@@ -483,7 +483,7 @@ Compared to the logistic regression model, the SVM performs better for predictio
   
   We would also like to further research the effects of type 1 vs type 2 error in this context. We know that type 2 error, false negatives, are considered more expensive due to the fact that a false negative can lead to someone with CVDs leaving the hospital with a medical issue that needs to be addressed. This further research would let us better pick a cutoff for the logistic regression and random forest models that will reduce type 2 error without too seriously affecting the overall misclassification error. 
   
-  \newpage
+\newpage
   
 ## VI. References
   
