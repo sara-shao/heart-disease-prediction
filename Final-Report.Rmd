@@ -434,6 +434,7 @@ tidy(selectedmod)[, -4] %>%
   kable(digits = 4,
         col.names = c("Term", "Estimate", "Stadard Errror", "P value"),
         caption = "Output of the optimal logsitic model in the first MICE Chain") %>% 
+  kable_styling(latex_options = "HOLD_position") %>% 
   row_spec(sig_vals, bold = T) %>% 
   footnote(general = "The significant coefficients at alpha = 0.05 are highlighted in bold")
 ```
@@ -462,6 +463,7 @@ tibble(flag.1, flag.2, flag.3, flag.4) %>%
   kable(col.names = rep(" ", 4),
         caption = "Output of the optimal Random Forest model in the first MICE Chain") %>% 
   row_spec(1, bold = T) %>% 
+  kable_styling(latex_options = "HOLD_position") %>% 
   pack_rows(index = c(" " = 1, "Confusion Matrix" = 3)) 
 ```
 
