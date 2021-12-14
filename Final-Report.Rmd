@@ -245,25 +245,25 @@ Finally, our third model uses a Support Vector Machine (SVM). An SVM uses kernel
 Then, using the chosen hyperparameters for each models, we ran 5-fold cross validation to determine the estimated test error for each of the models. In each fold, we trained three svm models using 80% of the data, each for the three types of kernels with the chosen parameters. Then, on the other 20% of the data, we computed the misclassification error rate at each fold. Then, we compared the mean of the misclassification rates to select the best model.
 
 ```{r}
-message("Linear kernel")
-mean(svm.cv.1$linear)
-message("Polynomial kernal")
-mean(svm.cv.1$poly)
-message("Radial kernel")
-mean(svm.cv.1$radial)
+linear <- mean(svm.cv.1$linear)
+poly <- mean(svm.cv.1$poly)
+radial <- mean(svm.cv.1$radial)
+tibble(Type = c("Linear", "Polynomial", "Radial"), 
+       Test.err = c(linear, poly, radial)) %>% 
+  arrange(Test.err) %>% 
+  kable(digits = 3, 
+        caption = "Estimated Test Error for the Three types of Kernels",
+        col.names = c("Type of Kernel", "Estimated Test Error")) %>% 
+  kable_styling(latex_options = "HOLD_position") %>% 
+  row_spec(1, bold = T) %>% 
+  kable_paper()
 ```
 
-For the first chain, the radial SVM model performed best among the three types of kernels. The best hyperparameter chosen for linear SVM is $c \approx 1.78$. In our best SVM model, there are 361 support vectors.
-
-```{r}
-svm.radial <- svm.imp.1$best.model
-svm.imp.1$cost[1,1]
-summary(svm.radial)
-```
+As shown in [Table 2], for the first chain, the radial SVM model performed best among the three types of kernels. The best hyperparameter chosen for linear SVM is $c \approx 1.78$. In our best SVM model, there are 361 support vectors.
 
 The radial kernel was selected for the four other MICE chains as well. The corresponding best hyperparameter and kernel type was saved as a list in a `RDS` file and was referred later for the comparison of 5-fold CV estimated error rate across different models.
 
-The summary of cost and type of kernel for each chain is shown below in [Table 2].
+The summary of cost and type of kernel for each chain is shown below in [Table 3].
 
 ```{r}
 costs <- c(svm.imp.1$cost[1,1], svm.imp.2$cost[1,1], svm.imp.3$cost[1,1],
@@ -414,10 +414,9 @@ tibble(Model = c("Backward-AIC Logistic", "Random Forest", "SVM", "Aggregate"),
   kable(digits = 3, 
         caption = "Estimated Mean Test-Error Rate for Different Models") %>% 
   kable_styling(latex_options = "HOLD_position") %>% 
-  row_spec(1, bold = T) %>% 
-  kable_paper()
+  row_spec(1, bold = T) 
 ```
-As shown in [Table 3] above, the random forest model had the best predictive performance with a mean misclassification rate of $\approx$ 12.5%, outperforming even the combined model. Therefore, if we wanted a model that would assess whether an at-risk patient most likely has or does not have heart disease based on their personal and health factors, this is the model we would choose.
+As shown in [Table 4] above, the random forest model had the best predictive performance with a mean misclassification rate of $\approx$ 12.5%, outperforming even the combined model. Therefore, if we wanted a model that would assess whether an at-risk patient most likely has or does not have heart disease based on their personal and health factors, this is the model we would choose.
 
 
 
@@ -426,9 +425,17 @@ Note: The following analysis of the logistic regression and random forest result
 
 ### Logistic Regression:
 
+The output of the optimal logistic model is shown below in [Table 5].
+
 ```{r}
 selectedmod <- readRDS("Final-models-and-CV-errors/Chain 1/glm.RDS")
-summary(selectedmod)
+sig_vals <- which(tidy(selectedmod)$p.value < 0.05)
+tidy(selectedmod)[, -4] %>% 
+  kable(digits = 4,
+        col.names = c("Term", "Estimate", "Stadard Errror", "P value"),
+        caption = "Output of the optimal logsitic model in the first MICE Chain") %>% 
+  row_spec(sig_vals, bold = T) %>% 
+  footnote(general = "The significant coefficients at alpha = 0.05 are highlighted in bold")
 ```
 
 We would like to use the results of the logistic regression in order to interpret the relationships between different variables and the response variable, despite it not being the best model for prediction. 
@@ -445,13 +452,22 @@ y <- heart$HeartDisease
 
 set.seed(1)
 rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), 
-                         ntree = 650)
-rf.heart
+                         ntree = 1000)
+confusion <- round(rf.heart$confusion, 4) %>% as.character()
+flag.1 <- c("Out-of-bag Error", "", "Actually 0", "Actually 1")
+flag.2 <- c("13.63%", "Predicted as 0", confusion[1], confusion[2])
+flag.3 <- c("","Predicted as 1", confusion[3], confusion[4])
+flag.4 <- c("", "Class Error", confusion[5], confusion[6])
+tibble(flag.1, flag.2, flag.3, flag.4) %>% 
+  kable(col.names = rep(" ", 4),
+        caption = "Output of the optimal Random Forest model in the first MICE Chain") %>% 
+  row_spec(1, bold = T) %>% 
+  pack_rows(index = c(" " = 1, "Confusion Matrix" = 3)) 
 ```
 
-The out-of-bag error from this model is 13.4%, meaning we expect this model to classify patients incorrectly around 13.4% of the time.
+As shown in [Table 6] above, the out-of-bag error from this model is 13.63%, meaning we expect this model to classify patients incorrectly around 13.63% of the time.
 
-Our confusion matrix tells us that there is a 0.141 false positive rate and a 0.126 false negative rate. This means that 14.1% of the time, our model predicts someone who doesn’t have heart disease to have heart disease. At the same time, 12.6% of the time, our model predicts someone who has heart disease to not have heart disease. It is better in this scenario that our false positive rate is higher than the false negative rate because it is better that we over predict people having heart disease than to under predict. If we over predict, people who didn't have heart disease but thought they did would get a second opinion and eventually realize that they don't actually have the disease. If we under predicted, then people who have actually heart disease wouldn't get the necessary treatment and may have worsened affects. Despite the false negative rate being quite high, we decided to keep the default cutoff value of 0.5 because without having done a lot more in-depth research on this medical topic, it would be fairly arbitrary of us to choose another cut off point. Intuitively, it would make sense for us to choose a higher cutoff value because there is a heavier social penalty for a high false negative value as compared to a false positive value. One limitation of our random forest is that we can't tell from this model which factors are important in predicting heart disease. Another limitation is that we can't predict heart disease as accurately with this model compared to the SVM model. 
+Our confusion matrix tells us that there is a 0.185 false positive rate and a 0.097 false negative rate. This means that 18.5% of the time, our model predicts someone who doesn’t have heart disease to have heart disease. At the same time, 9.7% of the time, our model predicts someone who has heart disease to not have heart disease. It is better in this scenario that our false positive rate is higher than the false negative rate because it is better that we over predict people having heart disease than to under predict. If we over predict, people who didn't have heart disease but thought they did would get a second opinion and eventually realize that they don't actually have the disease. If we under predicted, then people who have actually heart disease wouldn't get the necessary treatment and may have worsened affects. Despite the false negative rate being quite high, we decided to keep the default cutoff value of 0.5 because without having done a lot more in-depth research on this medical topic, it would be fairly arbitrary of us to choose another cut off point. Intuitively, it would make sense for us to choose a higher cutoff value because there is a heavier social penalty for a high false negative value as compared to a false positive value. One limitation of our random forest is that we can't tell from this model which factors are important in predicting heart disease. Another limitation is that we can't predict heart disease as accurately with this model compared to the SVM model. 
 
 ### SVM:
 Compared to the logistic regression model, the SVM performs better for prediction (12.9% misclassification rate), as we expected. However, this model does not tell us much about what factors are or aren't important in predicting heart disease, and it cannot tell us actually likelihoods of having heart disease or not. 

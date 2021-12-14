@@ -69,6 +69,7 @@ mean(misclassfication.radial)
 ```
 
 ```{r}
-
-
+svm.radial <- svm.imp.1$best.model
+svm.imp.1$cost[1,1]
+summary(svm.radial)
 ```
