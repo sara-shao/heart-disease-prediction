@@ -480,3 +480,20 @@ Compared to the logistic regression model, the SVM performs better for predictio
   Although still far from perfect, our models performed quite well when it came to predicting patients with CVD and we uncovered a lot of information as a result. Our methods yielded a heart disease prediction model with an 87.5% accuracy rate for at-risk patients. We also found that patient sex and chest pain type, among others, are important predictors of CVD. More specifically, we found that men are more likely to have CVD than women, and people that have no chest pain are more likely to have CVD than people with ATA or NAP type chest pain. Expanding this to the real world opens up a myriad of medical and personal uses for our models and predictive techniques. Starting simple, if someone were to be wary of their overall health for some combination of reasons (past medical history, family medical history, some form of high blood pressure/high blood sugar/cholesterol) and have not been or are not able to be diagnosed by a professional, they could be able to input their known medical information and receive a relative prediction for their risk of obtaining a CVD. Although this does not conduce a formal diagnosis, it is a quick and simple way to obtain a relative idea of health for those who may struggle economically with visiting the doctor. Our models could also be used in a more clinical setting with some success. If a professional noted that the prediction or probability for CVD in a patient was high, it would encourage them to conduct further tests and possibly seek some form of diagnosis. Although our models themselves aren't perfect, using them in conjunction with other medical testing could certainly yield positive results.
 
   As mentioned earlier, one of the biggest limitations of our findings is the dataset itself. Although the dataset is one of the largest available datasets on heart disease, the dataset's collection methodology limits the usefulness of our models. As mentioned in the Section II of this report, the data is only collected from at-risk patients who received CVD diagnostic check-ups at hospitals. Thus, the data may be weighted disproportionately towards people who would received a positive diagnosis for CVDs, as the sample population in the data were not just at-risk, but also either self-selected for or were chosen to be checked for CVDs. Furthermore, the data was collected from only five hospitals in the United States and Europe. As a result, the data is far from representative of the entire global population that is at-risk for CVDs, and our models and results may not be accurate for predicting the likelihood of CVDs for all at-risk populations in the world, and may provide limited understanding of signs that at-risk populations who are not represented by the data can analyze to check their risk for CVDs.
+  
+  \newpage
+  
+  ## VI. References
+  
+ “Cardiovascular Diseases (Cvds).” World Health Organization, World Health Organization, https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds).
+ 
+“Cardiovascular Diseases (Cvds).” World Health Organization, World Health Organization, https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds).
+
+“EKG Can Show False Positive Readings for Diagnosing Heart Condition.” ScienceDaily, ScienceDaily, 17 Nov. 2009, https://www.sciencedaily.com/releases/2009/11/091116103435.htm.
+“Ensemble Modeling.” Ensemble Modeling - an Overview | ScienceDirect Topics, https://www.sciencedirect.com/topics/computer-science/ensemble-modeling.
+
+Fedesoriano. “Heart Failure Prediction Dataset.” Kaggle, 10 Sept. 2021, https://www.kaggle.com/fedesoriano/heart-failure-prediction.
+
+“Multivariate Imputation by Chained Equations [R Package Mice Version 3.14.0].” The Comprehensive R Archive Network, Comprehensive R Archive Network (CRAN), 24 Nov. 2021, https://cran.r-project.org/web/packages/mice/index.html.
+
+NHS Choices, NHS, https://www.nhs.uk/conditions/cardiovascular-disease. 
