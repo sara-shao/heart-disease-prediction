@@ -481,6 +481,8 @@ Compared to the logistic regression model, the SVM performs better for predictio
 
   As mentioned earlier, one of the biggest limitations of our findings is the dataset itself. Although the dataset is one of the largest available datasets on heart disease, the dataset's collection methodology limits the usefulness of our models. As mentioned in the Section II of this report, the data is only collected from at-risk patients who received CVD diagnostic check-ups at hospitals. Thus, the data may be weighted disproportionately towards people who would received a positive diagnosis for CVDs, as the sample population in the data were not just at-risk, but also either self-selected for or were chosen to be checked for CVDs. Furthermore, the data was collected from only five hospitals in the United States and Europe. As a result, the data is far from representative of the entire global population that is at-risk for CVDs, and our models and results may not be accurate for predicting the likelihood of CVDs for all at-risk populations in the world, and may provide limited understanding of signs that at-risk populations who are not represented by the data can analyze to check their risk for CVDs.
   
+  We would also like to further research the effects of type 1 vs type 2 error in this context. We know that type 2 error, false negatives, are considered more expensive due to the fact that a false negative can lead to someone with CVDs leaving the hospital with a medical issue that needs to be addressed. This further research would let us better pick a cutoff for the logistic regression and random forest models that will reduce type 2 error without too seriously affecting the overall misclassification error. 
+  
   \newpage
   
 ## VI. References
