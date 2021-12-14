@@ -483,7 +483,7 @@ Compared to the logistic regression model, the SVM performs better for predictio
   
   \newpage
   
-  ## VI. References
+## VI. References
   
  “Cardiovascular Diseases (Cvds).” World Health Organization, World Health Organization, https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds).
  
