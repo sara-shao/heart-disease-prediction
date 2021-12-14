@@ -91,20 +91,26 @@ svm.select <- function(i){
     
     # Need to choose parameters
     set.seed(1)
-    tune.out.linear <- tune(svm, HeartDisease ~ ., data = trainData, kernel = "linear",
+    tune.out.linear <- tune(svm, HeartDisease ~ ., data = trainData, 
+                            kernel = "linear",
                             ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
-    tune.out.poly <- tune(svm, HeartDisease ~ ., data = trainData, kernel = "poly", degree=2,
+    tune.out.poly <- tune(svm, HeartDisease ~ ., data = trainData, 
+                          kernel = "poly", degree=2,
                           ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
-    tune.out.radial <- tune(svm, HeartDisease ~ ., data = trainData, kernel = "radial",
+    tune.out.radial <- tune(svm, HeartDisease ~ ., data = trainData, 
+                            kernel = "radial",
                             ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
     
     bestmod.linear <- tune.out.linear$best.model
     bestmod.poly <- tune.out.poly$best.model
     bestmod.radial <- tune.out.radial$best.model
     
-    misclassfication.linear[i] = get_misclassification(bestmod.linear, X.test, y.test)
-    misclassfication.poly[i] = get_misclassification(bestmod.poly, X.test, y.test)
-    misclassfication.radial[i] = get_misclassification(bestmod.radial, X.test, y.test)
+    misclassfication.linear[i] = get_misclassification(bestmod.linear, 
+                                                       X.test, y.test)
+    misclassfication.poly[i] = get_misclassification(bestmod.poly, 
+                                                     X.test, y.test)
+    misclassfication.radial[i] = get_misclassification(bestmod.radial, 
+                                                       X.test, y.test)
   }
   
   misclassfication.linear
@@ -112,7 +118,8 @@ svm.select <- function(i){
   misclassfication.radial
   temp <- tibble(linear = misclassfication.linear, poly = misclassfication.poly,
                  radial = misclassfication.radial)
-  write.csv(temp, file = "Final-models-and-CV-errors/Chain ", i, "/SVM-CVs.csv")
+  write.csv(temp, file = str_c("Final-models-and-CV-errors/Chain ", i, 
+                               "/SVM-CVs.csv"))
   
   # save model name
   mod.name <- c("linear", "poly", "radial")[which.min(colMeans(temp))]
@@ -125,7 +132,8 @@ svm.select <- function(i){
   bestmod.mod
   bestmod.param
   temp <- list(model = mod.name, cost = bestmod.param, best.model = bestmod.mod)
-  saveRDS(temp, file = "Final-models-and-CV-errors/Chain ", i, "/SVM-specs.RDS")
+  saveRDS(temp, file = str_c("Final-models-and-CV-errors/Chain ", i, 
+                             "/SVM-specs.RDS"))
 }
 
 for(i in 1:5){

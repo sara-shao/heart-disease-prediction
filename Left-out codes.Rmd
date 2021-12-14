@@ -1,0 +1,74 @@
+---
+title: "Left-out Codes"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Getting the best cost parameter for each types of kernels
+set.seed(1)
+tune.out.linear = tune(svm, HeartDisease ~ ., data = heart, kernel = "linear", ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+tune.out.poly = tune(svm, HeartDisease ~ ., data = heart, kernel = "poly", degree=2, ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+tune.out.radial = tune(svm, HeartDisease ~ ., data = heart, kernel = "radial", ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+```
+
+```{r}
+# Dividing the data into 5 folds
+set.seed(1)
+shuffled_heart <- heart[sample(nrow(heart)),]
+folds <- cut(seq(1,nrow(shuffled_heart)),breaks=5,labels=FALSE)
+```
+
+```{r, message=TRUE}
+# Best parameters for each kernel
+tune.out.linear.cost <- tune.out.linear$best.parameters$cost
+tune.out.poly.cost <- tune.out.poly$best.parameters$cost
+tune.out.radial.cost <- tune.out.radial$best.parameters$cost
+
+# error
+misclassfication.linear <- rep(0, 5)
+misclassfication.poly <- rep(0, 5)
+misclassfication.radial <- rep(0, 5)
+
+get_misclassification <- function(bestmod, X_test, y_test) {
+  prediction <- predict(bestmod, X_test)
+  tab <- table(y_test, prediction)
+  misclassification_rate <- 1 - sum(diag(tab))/sum(tab)
+  return(misclassification_rate)
+}
+
+# Cross validation
+for(i in 1:5){
+  #Segment your data by fold using the which() function 
+    testIndexes <- which(folds==i,arr.ind=TRUE)
+    testData <- shuffled_heart[testIndexes, ]
+    y.test <- testData$HeartDisease
+    X.test <- testData[, -12]
+    trainData <- shuffled_heart[-testIndexes, ]
+    
+  # Need to choose parameters
+   set.seed(1)
+   svm.linear <- svm(HeartDisease ~ ., kernel = "linear", data = trainData, cost = tune.out.linear.cost)
+   svm.poly <- svm(HeartDisease ~ ., kernel = "poly", data = trainData, degree=2, cost = tune.out.poly.cost)
+   svm.radial <- svm(HeartDisease ~ ., kernel = "radial", data = trainData, cost = tune.out.radial.cost)
+   
+   misclassfication.linear[i] = get_misclassification(svm.linear, X.test, y.test)
+   misclassfication.poly[i] = get_misclassification(svm.poly, X.test, y.test)
+   misclassfication.radial[i] = get_misclassification(svm.radial, X.test, y.test)
+ }
+
+message("Linear kernel")
+mean(misclassfication.linear)
+message("Polynomial kernal")
+mean(misclassfication.poly)
+message("Radial kernel")
+mean(misclassfication.radial)
+```
+
+```{r}
+
+
+```
