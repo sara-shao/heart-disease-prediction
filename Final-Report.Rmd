@@ -223,7 +223,7 @@ y <- heart$HeartDisease
 set.seed(1)
 rf.heart <- randomForest(HeartDisease ~ ., data = heart, mtry = sqrt(11), ntree = 1000)
 
-plot(rf.heart, xlim = c(100,1000), ylim = c(0.12,0.16))
+plot(rf.heart)
 legend("top", colnames(rf.heart$err.rate),col=1:6,cex=0.8,fill=1:6)
 ```
 
@@ -433,7 +433,7 @@ sig_vals <- which(tidy(selectedmod)$p.value < 0.05)
 tidy(selectedmod)[, -4] %>% 
   kable(digits = 4,
         col.names = c("Term", "Estimate", "Stadard Errror", "P value"),
-        caption = "Output of the optimal logsitic model in the first MICE Chain") %>% 
+        caption = "Output of the optimal logistic model in the first MICE Chain") %>% 
   kable_styling(latex_options = "HOLD_position") %>% 
   row_spec(sig_vals, bold = T) %>% 
   footnote(general = "The significant coefficients at alpha = 0.05 are highlighted in bold")
@@ -441,7 +441,7 @@ tidy(selectedmod)[, -4] %>%
 
 We would like to use the results of the logistic regression in order to interpret the relationships between different variables and the response variable, despite it not being the best model for prediction. 
 
-We will be concentrating on interpreting some of the significant terms. One of the categorical terms that is significant is Sex, with an associated coefficient of 5.345. This means that being male, compared to the baseline of female, leads to an expected 5.345 increase in the log odds of having heart disease. We can also say that being male, compared to the baseline of female, leads to the odds of having heart disease to multiply by a factor of e^(5.345). Chest Pain Type of ATA and NAP, and Fasting BS were three other main effects with significant ($\alpha  = 0.05$) coefficients. For patients with Chest Pain Type of ATA and NAP, compared to the baseline Chest Pain Type of ASY, the log odds of having a heart disease by -5.620 and -3.744 respectively. For patients who have FastingBS value of 1, compared to the baseline value of 0, the log odds of having a heart disease increases by 6.449 All other main effects are not considered significant at $\alpha  = 0.05$. 
+We will be concentrating on interpreting some of the significant terms. One of the categorical terms that is significant is Sex, with an associated coefficient of 5.345. This means that being male, compared to the baseline of female, leads to an expected 5.345 increase in the log odds of having heart disease. We can also say that being male, compared to the baseline of female, leads to the odds of having heart disease to multiply by a factor of e^(5.345). ChestPainType of ATA and NAP, and FastingBS were three other main effects with significant ($\alpha  = 0.05$) coefficients. For patients with ChestPainType of ATA and NAP, compared to the baseline ChestPainType of ASY, the log odds of having a heart disease by -5.620 and -3.744 respectively. For patients who have FastingBS value of 1, compared to the baseline value of 0, the log odds of having a heart disease increases by 6.449 All other main effects are not considered significant at $\alpha  = 0.05$. 
 
 There are a handful of significant interaction effects, most of which are interactions between 2 categorical variables. One example of this is between Sex and FastingBS. When FastingBS takes the baseline value of 0, a male compared to the baseline of female will result in an expected 5.345 increase in the log odds of having heart disease. When FastingBS takes the value 1, a male compared to the baseline of female will now result in an expected 5.345 - 2.365 = 2.980 increase in the log odds of having heart disease. One example of an interaction between a categorical and continuous variable is ChestPainType and Cholesterol. We should keep in mind that this interpretation may not be appropriate because the main effect for Cholesterol is not considered significant. For a baseline ChestPainType of ASY, an increase of 1 unit in Cholesterol will result in an expected decrease of 0.0003 in the log odds of having heart disease. For a ChestPainType of ATA, a 1 unit increase in Cholesterol now results in an expected increase in 0.0173 - 0.0003 = 0.0170 in the log odds of having heart disease. 
 
