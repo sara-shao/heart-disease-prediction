@@ -1,4 +1,5 @@
-# sta325_final_proj
+# Heart Disease Prediction
 
 Link to the Data: https://www.kaggle.com/fedesoriano/heart-failure-prediction
-Link to Google Drive: https://drive.google.com/drive/folders/1wSDTqDtQ1n3Z-APZWDNUuh_6nxrFYTam?usp=sharing
+
+This report uses a heart disease dataset from Kaggle to find an optimized prediction model for heart disease and analyze relationships between heart disease and important predictive factors.
